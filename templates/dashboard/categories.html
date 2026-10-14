@@ -1,0 +1,101 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}ক্যাটেগরি ব্যবস্থাপনা | ড্যাশবোর্ড{% endblock %}
+{% block dashboard_title %}পোশাকের ক্যাটেগরি তালিকা{% endblock %}
+
+{% block dashboard_content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Add Category Form (4 cols) -->
+    <div class="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="font-bold text-sm text-slate-900 pb-3 border-b border-slate-100">নতুন ক্যাটেগরি তৈরি করুন</h3>
+        
+        <form method="POST" class="space-y-4 text-xs">
+            {% csrf_token %}
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">ক্যাটেগরির নাম *</label>
+                <input type="text" name="name" required placeholder="যেমন: কাবলি সেট / সিল্ক জামদানি" 
+                       class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">জেন্ডার বিভাগ</label>
+                <select name="gender" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald bg-white">
+                    <option value="all">All / Unisex</option>
+                    <option value="men">Men (পুরুষ)</option>
+                    <option value="women">Women (নারী)</option>
+                    <option value="kids">Kids (শিশু)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">কভার ছবির লিঙ্ক (Image URL)</label>
+                <input type="url" name="image" placeholder="https://images.unsplash.com/..." 
+                       class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald font-mono">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">সংক্ষিপ্ত বিবরণ</label>
+                <textarea name="description" rows="2" placeholder="এই ক্যাটেগরির পোশাকের সারসংক্ষেপ..." 
+                          class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald"></textarea>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-brand-emerald hover:bg-brand-emerald-dark text-white rounded-xl font-bold transition shadow-md">
+                ক্যাটেগরি যোগ করুন
+            </button>
+        </form>
+    </div>
+
+    <!-- Category List (8 cols) -->
+    <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100">
+            <h3 class="font-bold text-sm text-slate-900">বিদ্যমান ক্যাটেগরি সমূহ</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[10px]">
+                        <th class="py-3 px-4">ক্যাটেগরি</th>
+                        <th class="py-3 px-4">জেন্ডার</th>
+                        <th class="py-3 px-4">পোশাক সংখ্যা</th>
+                        <th class="py-3 px-4">স্লাগ</th>
+                        <th class="py-3 px-4 text-right">ভিজিট</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for cat in categories %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 flex items-center space-x-3">
+                            {% if cat.image %}
+                                <img src="{{ cat.image }}" class="w-10 h-10 object-cover rounded-lg">
+                            {% else %}
+                                <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <i class="fa-solid fa-folder"></i>
+                                </div>
+                            {% endif %}
+                            <span class="font-bold text-slate-900">{{ cat.name }}</span>
+                        </td>
+                        <td class="py-3.5 px-4 font-semibold text-slate-600 capitalize">{{ cat.get_gender_display }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="bg-slate-100 text-slate-800 font-bold px-2 py-0.5 rounded-full text-[11px]">
+                                {{ cat.products.count }} টি
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-slate-400 text-[11px]">{{ cat.slug }}</td>
+                        <td class="py-3.5 px-4 text-right">
+                            <a href="{% url 'store:product_list' %}?category={{ cat.slug }}" target="_blank" class="text-brand-emerald hover:underline font-semibold">
+                                শপে দেখুন &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="p-6 text-center text-slate-400">কোনো ক্যাটেগরি নেই।</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}চেকআউট ও অর্ডার সম্পন্ন করুন | {{ BRAND_NAME }}{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 border-b border-gray-200 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="font-brand-serif text-2xl sm:text-3xl font-bold text-gray-900">{{ T.checkout_title }}</h1>
+        <p class="text-xs text-gray-500 mt-1">{% if CURRENT_LANG == 'en' %}Please provide accurate delivery details and active phone number for courier delivery.{% else %}অনুগ্রহ করে আপনার সঠিক ঠিকানা ও মোবাইল নম্বর দিন যাতে কুরিয়ার সহজে যোগাযোগ করতে পারে।{% endif %}</p>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <form action="{% url 'store:checkout' %}" method="POST" id="checkoutForm">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left: Shipping & Payment Details (8 cols) -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- 1. Customer Information Card -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-3 pb-3 border-b border-gray-100">
+                        <div class="w-8 h-8 rounded-full bg-brand-emerald text-white text-xs font-bold flex items-center justify-center">১</div>
+                        <h2 class="font-bold text-sm text-gray-900">{{ T.customer_info }}</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">{{ T.full_name }} *</label>
+                            <input type="text" name="full_name" required value="{{ initial_data.full_name }}" placeholder="e.g. Sajjad Hossain" 
+                                   class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">{{ T.phone_number }} *</label>
+                            <input type="tel" name="phone" required value="{{ initial_data.phone }}" placeholder="017XXXXXXXX / 018XXXXXXXX" 
+                                   class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald font-mono">
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">ইমেইল ঠিকানা (ঐচ্ছিক)</label>
+                            <input type="email" name="email" value="{{ initial_data.email }}" placeholder="example@mail.com" 
+                                   class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">বিভাগ (Division) *</label>
+                            <select name="division" id="divisionSelect" class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                                <option value="Dhaka" selected>ঢাকা (Dhaka)</option>
+                                <option value="Chittagong">চট্টগ্রাম (Chittagong)</option>
+                                <option value="Sylhet">সিলেট (Sylhet)</option>
+                                <option value="Rajshahi">রাজশাহী (Rajshahi)</option>
+                                <option value="Khulna">খুলনা (Khulna)</option>
+                                <option value="Barisal">বরিশাল (Barisal)</option>
+                                <option value="Rangpur">রংপুর (Rangpur)</option>
+                                <option value="Mymensingh">ময়মনসিংহ (Mymensingh)</option>
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="block font-semibold text-gray-700 mb-1">জেলা ও থানা (District & Thana) *</label>
+                            <input type="text" name="district" required value="{{ initial_data.district|default:'Dhaka' }}" placeholder="যেমন: ঢাকা, ধানমন্ডি বা চট্টগ্রাম, পাঁচলাইশ" 
+                                   class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="block font-semibold text-gray-700 mb-1">সম্পূর্ণ ডেলিভারি ঠিকানা (বাসা/ফ্ল্যাট নং, রোড, এলাকা) *</label>
+                            <textarea name="delivery_address" rows="3" required placeholder="যেমন: বাসা নং ১২, রোড নং ৫, ব্লক ডি, বনানী, ঢাকা" 
+                                      class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">{{ initial_data.address }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Delivery Zone Selection -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-3 pb-3 border-b border-gray-100">
+                        <div class="w-8 h-8 rounded-full bg-brand-emerald text-white text-xs font-bold flex items-center justify-center">২</div>
+                        <h2 class="font-bold text-sm text-gray-900">ডেলিভারি এরিয়া নির্বাচন করুন</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="delivery-card cursor-pointer border-2 border-brand-emerald bg-emerald-50/50 p-4 rounded-xl flex items-start justify-between">
+                            <div class="flex items-start space-x-3">
+                                <input type="radio" name="delivery_area" value="inside_dhaka" checked onchange="updateDelivery(60)" class="mt-1 text-brand-emerald focus:ring-brand-emerald">
+                                <div>
+                                    <h4 class="font-bold text-xs text-gray-900">ঢাকা সিটির ভেতর (Inside Dhaka)</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">সময়: ২৪ থেকে ৪৮ ঘণ্টা</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-xs text-brand-emerald">৳৬০</span>
+                        </label>
+
+                        <label class="delivery-card cursor-pointer border-2 border-gray-200 p-4 rounded-xl flex items-start justify-between hover:bg-gray-50">
+                            <div class="flex items-start space-x-3">
+                                <input type="radio" name="delivery_area" value="outside_dhaka" onchange="updateDelivery(120)" class="mt-1 text-brand-emerald focus:ring-brand-emerald">
+                                <div>
+                                    <h4 class="font-bold text-xs text-gray-900">ঢাকার বাইরে সারা বাংলাদেশ</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">সময়: ২ থেকে ৩ দিন (Steadfast/Pathao)</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-xs text-gray-900">৳১২০</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 3. Payment Method Selection (Bangladeshi Gateways) -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-3 pb-3 border-b border-gray-100">
+                        <div class="w-8 h-8 rounded-full bg-brand-emerald text-white text-xs font-bold flex items-center justify-center">৩</div>
+                        <h2 class="font-bold text-sm text-gray-900">পেমেন্ট মেথড (Payment Method)</h2>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Option 1: Cash on Delivery -->
+                        <label class="block border rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition border-brand-emerald bg-emerald-50/20">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="payment_method" value="cod" checked onchange="togglePaymentBoxes('cod')" class="text-brand-emerald focus:ring-brand-emerald">
+                                    <div>
+                                        <span class="font-bold text-xs text-gray-900">ক্যাশ অন ডেলিভারি (Cash on Delivery)</span>
+                                        <p class="text-[11px] text-gray-500">পণ্য হাতে পেয়ে ডেলিভারিম্যানকে টাকা পরিশোধ করুন।</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-hand-holding-dollar text-brand-gold text-lg"></i>
+                            </div>
+                        </label>
+
+                        <!-- Option 2: bKash -->
+                        <label class="block border rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="payment_method" value="bkash" onchange="togglePaymentBoxes('bkash')" class="text-brand-emerald focus:ring-brand-emerald">
+                                    <div>
+                                        <span class="font-bold text-xs text-bKash">বিকাশ (bKash Payment / Send Money)</span>
+                                        <p class="text-[11px] text-gray-500">বিকাশ ওয়ালেট থেকে সরাসরি পেমেন্ট</p>
+                                    </div>
+                                </div>
+                                <span class="bg-[#e2136e] text-white text-[10px] font-bold px-2 py-0.5 rounded">bKash</span>
+                            </div>
+
+                            <!-- bKash Instructions & Inputs Box -->
+                            <div id="bkashBox" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-3 text-xs bg-rose-50/50 p-3 rounded-lg">
+                                <p class="text-gray-700">
+                                    📌 আমাদের বিকাশ মার্চেন্ট/পার্সোনাল নম্বর: <strong class="text-bKash text-sm font-mono">{{ HOTLINE }}</strong><br>
+                                    সর্বমোট টাকার পরিমাণ সেন্ড মানি বা পেমেন্ট করে নিচের বক্সে আপনার বিকাশ নম্বর ও TrxID দিন:
+                                </p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-700">প্রেরকের বিকাশ নম্বর</label>
+                                        <input type="text" name="sender_number" placeholder="01XXXXXXXXX" class="w-full p-2 bg-white rounded border border-gray-200 font-mono text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-700">ট্রানজেকশন আইডি (TrxID)</label>
+                                        <input type="text" name="trx_id" placeholder="যেমন: BL98A2K5" class="w-full p-2 bg-white rounded border border-gray-200 uppercase font-mono text-xs">
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Option 3: Nagad -->
+                        <label class="block border rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="payment_method" value="nagad" onchange="togglePaymentBoxes('nagad')" class="text-brand-emerald focus:ring-brand-emerald">
+                                    <div>
+                                        <span class="font-bold text-xs text-amber-700">নগদ (Nagad Payment)</span>
+                                        <p class="text-[11px] text-gray-500">নগদ ওয়ালেট থেকে পেমেন্ট করুন</p>
+                                    </div>
+                                </div>
+                                <span class="bg-[#f7941d] text-white text-[10px] font-bold px-2 py-0.5 rounded">Nagad</span>
+                            </div>
+
+                            <div id="nagadBox" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-3 text-xs bg-amber-50/50 p-3 rounded-lg">
+                                <p class="text-gray-700">
+                                    📌 আমাদের নগদ মার্চেন্ট নম্বর: <strong class="text-amber-700 text-sm font-mono">{{ HOTLINE }}</strong>
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 4. Customer Order Notes -->
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-xs">
+                    <label class="block font-semibold text-gray-700 mb-1">অর্ডার সংক্রান্ত বিশেষ কোনো নোট বা অনুরোধ (ঐচ্ছিক):</label>
+                    <input type="text" name="customer_notes" placeholder="যেমন: বিকেলে ফোন দিয়ে ডেলিভারি করবেন" 
+                           class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                </div>
+
+            </div>
+
+            <!-- Right: Order Summary Sidebar (4 cols) -->
+            <div class="lg:col-span-4">
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-md sticky top-28 space-y-4">
+                    <h3 class="font-brand-serif text-lg font-bold text-gray-900 pb-3 border-b border-gray-100">
+                        আপনার ব্যাগ ({{ cart|length }} আইটেম)
+                    </h3>
+
+                    <div class="max-h-60 overflow-y-auto divide-y divide-gray-100 pr-1 space-y-2">
+                        {% for item in cart %}
+                        <div class="flex items-center space-x-3 py-2 text-xs">
+                            <img src="{{ item.image }}" alt="{{ item.name }}" class="w-12 h-14 object-cover rounded-lg bg-gray-50 border">
+                            <div class="flex-grow">
+                                <h4 class="font-semibold text-gray-900 line-clamp-1">{{ item.name }}</h4>
+                                <span class="text-gray-400 text-[10px]">সাইজ: {{ item.size }} | পরিমাণ: {{ item.quantity }}x</span>
+                            </div>
+                            <span class="font-bold text-gray-900">৳{{ item.total_price }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="pt-3 border-t border-gray-100 space-y-2 text-xs text-gray-600">
+                        <div class="flex justify-between">
+                            <span>পোশাকের মূল্য:</span>
+                            <span class="font-bold text-gray-900">৳{{ subtotal }}</span>
+                        </div>
+                        {% if coupon_discount > 0 %}
+                        <div class="flex justify-between text-emerald-600 font-semibold">
+                            <span>কুপন ছাড় ({{ coupon_code }}):</span>
+                            <span>-৳{{ coupon_discount }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between">
+                            <span>ডেলিভারি চার্জ:</span>
+                            <span class="font-bold text-gray-900" id="deliveryFeeDisplay">৳৬০.০০</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-200 flex justify-between items-baseline">
+                        <span class="text-sm font-bold text-gray-900">মোট প্রদেয় টাকা:</span>
+                        <span class="text-2xl font-bold text-brand-emerald" id="totalAmountDisplay">৳0</span>
+                    </div>
+
+                    <!-- Confirm Order Button -->
+                    <button type="submit" 
+                            class="w-full py-4 rounded-xl bg-brand-emerald hover:bg-brand-emerald-dark text-white font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-900/10 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-circle-check text-sm"></i>
+                        <span>অর্ডার নিশ্চিত করুন (Confirm Order)</span>
+                    </button>
+
+                    <div class="pt-2 text-center text-[10px] text-gray-400">
+                        অর্ডার নিশ্চিত করার মাধ্যমে আপনি আমাদের ডেলিভারি ও রিটার্ন পলিসিতে সম্মতি প্রকাশ করছেন।
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<script>
+    const subtotal = {{ subtotal }};
+    const couponDiscount = {{ coupon_discount }};
+    let currentDelivery = 60;
+
+    function recalculateTotal() {
+        const total = Math.max(0, subtotal - couponDiscount + currentDelivery);
+        document.getElementById('deliveryFeeDisplay').textContent = `৳${currentDelivery}.০০`;
+        document.getElementById('totalAmountDisplay').textContent = `৳${total.toFixed(2)}`;
+    }
+
+    function updateDelivery(amount) {
+        currentDelivery = amount;
+        recalculateTotal();
+    }
+
+    function togglePaymentBoxes(method) {
+        const bkash = document.getElementById('bkashBox');
+        const nagad = document.getElementById('nagadBox');
+        if (bkash) bkash.classList.toggle('hidden', method !== 'bkash');
+        if (nagad) nagad.classList.toggle('hidden', method !== 'nagad');
+    }
+
+    // Initialize total on load
+    recalculateTotal();
+</script>
+{% endblock %}

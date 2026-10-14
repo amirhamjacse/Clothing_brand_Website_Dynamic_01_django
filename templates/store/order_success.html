@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}অর্ডার সফল হয়েছে! #{{ order.order_number }} | {{ BRAND_NAME }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+    <!-- Success Banner -->
+    <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl text-center space-y-4">
+        
+        <div class="w-16 h-16 bg-emerald-100 text-brand-emerald rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
+            <i class="fa-solid fa-check"></i>
+        </div>
+
+        <span class="text-xs bg-emerald-50 text-emerald-800 font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            অর্ডার নিশ্চিতকরণ কোড: #{{ order.order_number }}
+        </span>
+
+        <h1 class="font-brand-serif text-2xl sm:text-3xl font-bold text-gray-950">
+            আলহামদুলিল্লাহ! আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে।
+        </h1>
+
+        <p class="text-xs text-gray-600 max-w-lg mx-auto leading-relaxed">
+            ধন্যবাদ, <strong>{{ order.full_name }}</strong>! আমাদের কাস্টমার সাপোর্ট টিম খুব শীঘ্রই <strong>{{ order.phone }}</strong> নম্বরে কল দিয়ে অর্ডারটি কনফার্ম করে কুরিয়ারে হস্তান্তর করবে।
+        </p>
+
+        <!-- Order Action Buttons -->
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <a href="{% url 'store:track_order' %}?order_number={{ order.order_number }}&phone={{ order.phone }}" 
+               class="px-5 py-2.5 rounded-xl bg-brand-emerald hover:bg-brand-emerald-dark text-white text-xs font-bold transition flex items-center shadow-md">
+                <i class="fa-solid fa-location-crosshairs mr-2"></i> অর্ডার লাইভ ট্র্যাক করুন
+            </a>
+            <button onclick="window.print()" 
+                    class="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold transition flex items-center">
+                <i class="fa-solid fa-print mr-2"></i> মানি রিসিট প্রিন্ট করুন
+            </button>
+            <a href="{% url 'store:product_list' %}" 
+               class="px-5 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-semibold transition">
+                আরও কেনাকাটা
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Printable Invoice Details Card -->
+    <div class="mt-8 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-gray-100">
+            <div>
+                <span class="font-brand-serif text-xl font-bold text-brand-emerald">{{ BRAND_NAME }}</span>
+                <span class="block text-[10px] text-gray-400">মেমো নং: {{ order.order_number }}</span>
+            </div>
+            <div class="text-right mt-2 sm:mt-0 text-xs text-gray-500">
+                <p>তারিখ: {{ order.created_at|date:"d M, Y - h:i A" }}</p>
+                <p>স্ট্যাটাস: <strong class="text-amber-600 uppercase">{{ order.get_status_display }}</strong></p>
+            </div>
+        </div>
+
+        <!-- Customer & Shipping Specs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs text-gray-600 pb-6 border-b border-gray-100">
+            <div>
+                <h4 class="font-bold text-gray-900 uppercase text-[11px] mb-2">গ্রাহকের ঠিকানা:</h4>
+                <p class="font-semibold text-gray-800">{{ order.full_name }}</p>
+                <p>ফোন: {{ order.phone }}</p>
+                {% if order.email %}<p>ইমেইল: {{ order.email }}</p>{% endif %}
+                <p class="mt-1 text-gray-500">{{ order.delivery_address }}, {{ order.district }}, {{ order.division }}</p>
+            </div>
+            <div>
+                <h4 class="font-bold text-gray-900 uppercase text-[11px] mb-2">পেমেন্ট ও ডেলিভারি তথ্য:</h4>
+                <p>পেমেন্ট মেথড: <strong class="text-gray-800">{{ order.get_payment_method_display }}</strong></p>
+                <p>পেমেন্ট স্ট্যাটাস: <span class="uppercase font-bold {% if order.payment_status == 'paid' %}text-emerald-600{% else %}text-amber-600{% endif %}">{{ order.get_payment_status_display }}</span></p>
+                {% if order.trx_id %}<p>TrxID: <span class="font-mono font-bold">{{ order.trx_id }}</span></p>{% endif %}
+                <p class="mt-1">ডেলিভারি এলাকা: {{ order.get_delivery_area_display }}</p>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <th class="py-2.5 px-3">পোশাকের নাম</th>
+                        <th class="py-2.5 px-3">সাইজ</th>
+                        <th class="py-2.5 px-3 text-center">পরিমাণ</th>
+                        <th class="py-2.5 px-3 text-right">দর</th>
+                        <th class="py-2.5 px-3 text-right">মোট</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td class="py-3 px-3 font-medium text-gray-900">{{ item.product_name }}</td>
+                        <td class="py-3 px-3 text-gray-600">{{ item.size|default:'Regular' }}</td>
+                        <td class="py-3 px-3 text-center font-bold">{{ item.quantity }}</td>
+                        <td class="py-3 px-3 text-right">৳{{ item.price }}</td>
+                        <td class="py-3 px-3 text-right font-bold text-gray-900">৳{{ item.subtotal }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals Breakdown -->
+        <div class="pt-4 border-t border-gray-100 flex justify-end text-xs">
+            <div class="w-64 space-y-2">
+                <div class="flex justify-between text-gray-600">
+                    <span>পোশাকের মূল্য:</span>
+                    <span class="font-bold text-gray-900">৳{{ order.subtotal }}</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                <div class="flex justify-between text-emerald-600 font-bold">
+                    <span>ছাড় ({{ order.coupon_code }}):</span>
+                    <span>-৳{{ order.discount_amount }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between text-gray-600">
+                    <span>ডেলিভারি ফি:</span>
+                    <span class="font-bold text-gray-900">৳{{ order.shipping_cost }}</span>
+                </div>
+                <div class="flex justify-between pt-2 border-t border-gray-200 text-sm font-bold text-brand-emerald">
+                    <span>সর্বমোট:</span>
+                    <span>৳{{ order.total_amount }}</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

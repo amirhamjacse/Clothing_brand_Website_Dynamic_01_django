@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}শপ ড্যাশবোর্ড | {{ BRAND_NAME }} ম্যানেজমেন্ট{% endblock %}</title>
+    
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            emerald: '#0c3527',
+                            'emerald-dark': '#062017',
+                            gold: '#c59b27'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Hind Siliguri"', '"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="min-h-screen flex text-slate-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between hidden md:flex flex-shrink-0 border-r border-slate-800">
+        <div>
+            <!-- Dashboard Logo -->
+            <div class="h-20 flex items-center px-6 border-b border-slate-800">
+                <a href="{% url 'dashboard:index' %}" class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-brand-emerald text-brand-gold font-bold flex items-center justify-center text-lg border border-brand-gold/30">
+                        A
+                    </div>
+                    <div>
+                        <span class="text-white font-bold text-base tracking-wide">{{ BRAND_NAME }}</span>
+                        <span class="block text-[10px] text-brand-gold uppercase tracking-widest font-semibold">শপ ম্যানেজার</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1.5 text-xs font-medium">
+                <a href="{% url 'dashboard:index' %}" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl transition hover:bg-slate-800 hover:text-white {% if request.resolver_match.url_name == 'index' %}bg-brand-emerald text-white font-bold{% endif %}">
+                    <i class="fa-solid fa-chart-pie text-sm"></i>
+                    <span>ওভারভিউ (Dashboard)</span>
+                </a>
+
+                <a href="{% url 'dashboard:orders' %}" 
+                   class="flex items-center justify-between px-4 py-3 rounded-xl transition hover:bg-slate-800 hover:text-white {% if 'order' in request.resolver_match.url_name %}bg-brand-emerald text-white font-bold{% endif %}">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-box-open text-sm"></i>
+                        <span>অর্ডারসমূহ (Orders)</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'dashboard:product_management' %}" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl transition hover:bg-slate-800 hover:text-white {% if request.resolver_match.url_name == 'product_management' %}bg-brand-emerald text-white font-bold{% endif %}">
+                    <i class="fa-solid fa-shirt text-sm"></i>
+                    <span>পোশাক তালিকা ও স্টক</span>
+                </a>
+
+                <a href="{% url 'dashboard:product_add' %}" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl transition hover:bg-slate-800 hover:text-white {% if request.resolver_match.url_name == 'product_add' %}bg-brand-emerald text-white font-bold{% endif %}">
+                    <i class="fa-solid fa-circle-plus text-sm"></i>
+                    <span>নতুন পোশাক যোগ করুন</span>
+                </a>
+
+                <a href="{% url 'dashboard:category_management' %}" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl transition hover:bg-slate-800 hover:text-white {% if request.resolver_match.url_name == 'category_management' %}bg-brand-emerald text-white font-bold{% endif %}">
+                    <i class="fa-solid fa-layer-group text-sm"></i>
+                    <span>ক্যাটেগরি (Categories)</span>
+                </a>
+
+                <a href="{% url 'dashboard:coupon_management' %}" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl transition hover:bg-slate-800 hover:text-white {% if request.resolver_match.url_name == 'coupon_management' %}bg-brand-emerald text-white font-bold{% endif %}">
+                    <i class="fa-solid fa-tags text-sm"></i>
+                    <span>কুপন ও ছাড় (Coupons)</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer Action -->
+        <div class="p-4 border-t border-slate-800 space-y-2">
+            <a href="{% url 'store:home' %}" target="_blank" 
+               class="flex items-center justify-center space-x-2 w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition">
+                <i class="fa-solid fa-globe"></i>
+                <span>ওয়েবসাইট দেখুন (Storefront)</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        
+        <!-- Header Bar -->
+        <header class="h-20 bg-white border-b border-slate-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-30">
+            <!-- Mobile nav toggle -->
+            <div class="flex items-center space-x-3 md:hidden">
+                <a href="{% url 'store:home' %}" class="text-brand-emerald font-bold text-sm">
+                    {{ BRAND_NAME }}
+                </a>
+            </div>
+
+            <!-- Page Title Context -->
+            <div class="hidden md:block">
+                <h2 class="font-bold text-base text-slate-800">
+                    {% block dashboard_title %}ম্যানেজমেন্ট ড্যাশবোর্ড{% endblock %}
+                </h2>
+                <p class="text-xs text-slate-400">রিয়েল-টাইম বিক্রয়, স্টক ও গ্রাহক ট্র্যাকিং</p>
+            </div>
+
+            <!-- Header Quick Actions -->
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'store:home' %}" class="text-xs text-slate-600 hover:text-brand-emerald flex items-center bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">
+                    <i class="fa-solid fa-store mr-1.5 text-brand-gold"></i> অনলাইন শপে যান
+                </a>
+                
+                <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
+                    <div class="w-8 h-8 rounded-full bg-brand-emerald text-white text-xs font-bold flex items-center justify-center">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div class="text-xs hidden sm:block">
+                        <span class="block font-semibold text-slate-800">অ্যাডমিন</span>
+                        <span class="text-[10px] text-emerald-600 font-bold">অনলাইন</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Messages Notification Banner -->
+        {% if messages %}
+        <div class="px-6 sm:px-8 pt-4">
+            {% for message in messages %}
+                <div class="p-3.5 mb-2 rounded-xl text-xs flex items-center justify-between
+                    {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200
+                    {% elif message.tags == 'error' %}bg-rose-50 text-rose-800 border border-rose-200
+                    {% else %}bg-amber-50 text-amber-800 border border-amber-200{% endif %}">
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Main Body -->
+        <main class="p-6 sm:p-8 flex-1">
+            {% block dashboard_content %}{% endblock %}
+        </main>
+
+    </div>
+
+</body>
+</html>

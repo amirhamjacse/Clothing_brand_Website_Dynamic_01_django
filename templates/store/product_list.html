@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}পোশাক সংগ্রহ (Shop) | {{ BRAND_NAME }}{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 border-b border-gray-200 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <nav class="flex text-xs text-gray-500 mb-2 space-x-2">
+                    <a href="{% url 'store:home' %}" class="hover:text-brand-emerald">হোম</a>
+                    <span>/</span>
+                    <span class="text-gray-900 font-medium">
+                        {% if current_category %}{{ current_category.name }}{% else %}সকল পোশাক{% endif %}
+                    </span>
+                </nav>
+                <h1 class="font-brand-serif text-2xl sm:text-3xl font-bold text-gray-900">
+                    {% if current_category %}
+                        {{ current_category.name }}
+                    {% elif search_query %}
+                        "{{ search_query }}" এর ফলাফল
+                    {% else %}
+                        পোশাকের সম্পূর্ণ সম্ভার
+                    {% endif %}
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">মোট {{ total_count }} টি অনন্য পোশাক প্রদর্শিত হচ্ছে</p>
+            </div>
+
+            <!-- Sorting Form -->
+            <form method="GET" class="flex items-center space-x-2">
+                {% if current_category %}<input type="hidden" name="category" value="{{ current_category.slug }}">{% endif %}
+                {% if selected_gender %}<input type="hidden" name="gender" value="{{ selected_gender }}">{% endif %}
+                {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+                <label for="sort" class="text-xs text-gray-600 font-medium whitespace-nowrap">সাজান:</label>
+                <select name="sort" id="sort" onchange="this.form.submit()" 
+                        class="bg-white border border-gray-200 rounded-lg text-xs py-2 px-3 focus:outline-none focus:ring-1 focus:ring-brand-emerald">
+                    <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>নতুন আগমন (Newest)</option>
+                    <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>দাম: কম থেকে বেশি</option>
+                    <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>দাম: বেশি থেকে কম</option>
+                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>জনপ্রিয় ও রেটিং</option>
+                </select>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <!-- Sidebar Filters -->
+        <div class="space-y-6">
+            <!-- Gender Filter -->
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">বিভাগ (Category / Gender)</h3>
+                <div class="space-y-1.5 text-xs">
+                    <a href="{% url 'store:product_list' %}" 
+                       class="block px-3 py-2 rounded-lg transition {% if not selected_gender and not current_category %}bg-brand-emerald text-white font-semibold{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+                        সকল পোশাক (All)
+                    </a>
+                    <a href="{% url 'store:product_list' %}?gender=men" 
+                       class="block px-3 py-2 rounded-lg transition {% if selected_gender == 'men' %}bg-brand-emerald text-white font-semibold{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+                        <i class="fa-solid fa-person mr-2"></i> পুরুষদের কালেকশন (Men's)
+                    </a>
+                    <a href="{% url 'store:product_list' %}?gender=women" 
+                       class="block px-3 py-2 rounded-lg transition {% if selected_gender == 'women' %}bg-brand-emerald text-white font-semibold{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+                        <i class="fa-solid fa-person-dress mr-2"></i> নারীদের কালেকশন (Women's)
+                    </a>
+                    <a href="{% url 'store:product_list' %}?gender=unisex" 
+                       class="block px-3 py-2 rounded-lg transition {% if selected_gender == 'unisex' %}bg-brand-emerald text-white font-semibold{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+                        <i class="fa-solid fa-shirt mr-2"></i> ক্যাজুয়াল ও টি-শার্ট
+                    </a>
+                </div>
+            </div>
+
+            <!-- Category Specific Filter -->
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">ক্যাটেগরি তালিকা</h3>
+                <div class="space-y-1 text-xs">
+                    {% for cat in categories %}
+                    <a href="{% url 'store:product_list' %}?category={{ cat.slug }}" 
+                       class="flex items-center justify-between px-3 py-2 rounded-lg transition {% if current_category.slug == cat.slug %}bg-amber-50 text-brand-emerald font-bold border border-amber-200{% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+                        <span>{{ cat.name }}</span>
+                        <span class="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{{ cat.products.count }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Price Range Filter Form -->
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">বাজেট (মূল্য সীমা ৳)</h3>
+                <form method="GET" class="space-y-3">
+                    {% if current_category %}<input type="hidden" name="category" value="{{ current_category.slug }}">{% endif %}
+                    {% if selected_gender %}<input type="hidden" name="gender" value="{{ selected_gender }}">{% endif %}
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-gray-500">সর্বনিম্ন (৳)</label>
+                            <input type="number" name="min_price" placeholder="৳500" value="{{ request.GET.min_price }}"
+                                   class="w-full text-xs p-2 border border-gray-200 rounded-lg outline-none focus:border-brand-emerald">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500">সর্বোচ্চ (৳)</label>
+                            <input type="number" name="max_price" placeholder="৳10,000" value="{{ request.GET.max_price }}"
+                                   class="w-full text-xs p-2 border border-gray-200 rounded-lg outline-none focus:border-brand-emerald">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-gray-900 hover:bg-brand-emerald text-white rounded-lg text-xs font-semibold transition">
+                        ফিল্টার প্রয়োগ করুন
+                    </button>
+                </form>
+            </div>
+
+            <!-- Trust Card -->
+            <div class="bg-gradient-to-br from-brand-emerald to-emerald-900 text-white p-5 rounded-2xl">
+                <i class="fa-solid fa-shield-heart text-2xl text-brand-gold mb-2"></i>
+                <h4 class="font-bold text-sm">১০০% ক্যাশ অন ডেলিভারি</h4>
+                <p class="text-[11px] text-emerald-100 mt-1 leading-relaxed">
+                    পণ্য হাতে পেয়ে চেক করে মূল্য পরিশোধের ১০০% গ্যারান্টি। কোনো ঝুঁকি নেই।
+                </p>
+            </div>
+        </div>
+
+        <!-- Product Grid Main -->
+        <div class="lg:col-span-3">
+            {% if products %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+                    {% for product in products %}
+                        {% include 'store/includes/product_card.html' with product=product %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white rounded-2xl p-12 text-center border border-gray-100">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-gray-400 text-2xl mb-4">
+                        <i class="fa-solid fa-shirt"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900">কোনো পোশাক পাওয়া যায়নি</h3>
+                    <p class="text-xs text-gray-500 mt-1">অনুগ্রহ করে ভিন্ন কোনো ক্যাটেগরি বা ফিল্টার নির্বাচন করুন।</p>
+                    <a href="{% url 'store:product_list' %}" class="inline-block mt-4 px-6 py-2 bg-brand-emerald text-white text-xs font-semibold rounded-lg">
+                        সকল পোশাক দেখুন
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

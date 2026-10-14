@@ -1,0 +1,140 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}{{ action }} পোশাক | ড্যাশবোর্ড{% endblock %}
+{% block dashboard_title %}{{ action }} পোশাকের বিবরণ{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-4">
+        <a href="{% url 'dashboard:product_management' %}" class="text-xs font-semibold text-slate-500 hover:text-brand-emerald">
+            &larr; পোশাকে তালিকায় ফিরে যান
+        </a>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+        <form method="POST" class="space-y-6 text-xs">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-700 mb-1">পোশাকের নাম *</label>
+                    <input type="text" name="name" required value="{{ product.name }}" placeholder="যেমন: প্রিমিয়াম লিনেন এমব্রয়ডারি পাঞ্জাবি" 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald font-semibold text-slate-900">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">ক্যাটেগরি *</label>
+                    <select name="category" required class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald bg-white">
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }} ({{ cat.get_gender_display }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">জেন্ডার বিভাগ</label>
+                    <select name="gender" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald bg-white">
+                        <option value="men" {% if product.gender == 'men' %}selected{% endif %}>Men (পুরুষ)</option>
+                        <option value="women" {% if product.gender == 'women' %}selected{% endif %}>Women (নারী)</option>
+                        <option value="kids" {% if product.gender == 'kids' %}selected{% endif %}>Kids (শিশু)</option>
+                        <option value="unisex" {% if product.gender == 'unisex' %}selected{% endif %}>Unisex / Casual</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">ফ্যাব্রিক বিবরণ (Fabric Spec) *</label>
+                    <input type="text" name="fabric" required value="{{ product.fabric|default:'100% Fine Egyptian Combed Cotton' }}" placeholder="যেমন: 100% গিজা কটন / সুতি জামদানি" 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">SKU কোড (ফাঁকা রাখলে স্বয়ংক্রিয় তৈরি হবে)</label>
+                    <input type="text" name="sku" value="{{ product.sku }}" placeholder="AHMZ-PAN-01" 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 font-mono outline-none focus:border-brand-emerald">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">নিয়মিত মূল্য (Regular Price ৳) *</label>
+                    <input type="number" step="0.01" name="regular_price" required value="{{ product.regular_price }}" placeholder="2450.00" 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald font-bold">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">ছাড়ের মূল্য (Discount Price ৳ - ঐচ্ছিক)</label>
+                    <input type="number" step="0.01" name="discount_price" value="{{ product.discount_price }}" placeholder="1990.00" 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald text-emerald-700 font-bold">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">স্টক সংখ্যা (Stock Quantity) *</label>
+                    <input type="number" name="stock" required value="{{ product.stock|default:25 }}" 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald font-bold">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">সহজলভ্য সাইজসমূহ (কমা দিয়ে লিখুন)</label>
+                    <input type="text" name="sizes" value="38, 40, 42, 44, 46" placeholder="38, 40, 42, 44 বা S, M, L, XL" 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-700 mb-1">প্রধান ছবির লিঙ্ক (Primary Image URL) *</label>
+                    <input type="url" name="primary_image" required value="{{ product.primary_image }}" placeholder="https://images.unsplash.com/..." 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald font-mono">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-700 mb-1">অল্টারনেট / হোভার ছবির লিঙ্ক (Hover Image URL - ঐচ্ছিক)</label>
+                    <input type="url" name="hover_image" value="{{ product.hover_image }}" placeholder="https://images.unsplash.com/..." 
+                           class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald font-mono">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-700 mb-1">পণ্যের বিস্তারিত বিবরণ (Description) *</label>
+                    <textarea name="description" rows="4" required placeholder="পোশাকের বুনন, স্টাইল ও বিশেষত্ব..." 
+                              class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald leading-relaxed">{{ product.description }}</textarea>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-700 mb-1">বৈশিষ্ট্যসমূহ (Features - প্রতি লাইনে একটি করে)</label>
+                    <textarea name="features" rows="3" placeholder="মান্দারিন কলার ও সূক্ষ্ম কারুকাজ&#10;দুই পাশে সুবিধাজনক পকেট&#10;ড্রাই ক্লিন অথবা নরম পানিতে ধোয়া" 
+                              class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-emerald">{{ product.features }}</textarea>
+                </div>
+            </div>
+
+            <!-- Promotion & Badge Toggles -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="block font-bold text-slate-800 mb-3 uppercase tracking-wider text-[10px]">ডিসপ্লে ও ব্যাজ সেটিংস</span>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_eid_special" {% if product.is_eid_special %}checked{% endif %} class="rounded text-brand-emerald">
+                        <span class="font-medium text-slate-800">ঈদ স্পেশাল</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_new" {% if product.is_new %}checked{% endif %} class="rounded text-brand-emerald">
+                        <span class="font-medium text-slate-800">নতুন আগমন</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_bestseller" {% if product.is_bestseller %}checked{% endif %} class="rounded text-brand-emerald">
+                        <span class="font-medium text-slate-800">বেস্টসেলার</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_featured" {% if product.is_featured %}checked{% endif %} class="rounded text-brand-emerald">
+                        <span class="font-medium text-slate-800">ফিচার্ড হোমপেজ</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="pt-4 flex justify-end space-x-3">
+                <a href="{% url 'dashboard:product_management' %}" class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition">
+                    বাতিল
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-brand-emerald hover:bg-brand-emerald-dark text-white rounded-xl font-bold transition shadow-md">
+                    পোশাক সংরক্ষণ করুন
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

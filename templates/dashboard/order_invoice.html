@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ইনভয়েস #{{ order.order_number }} | {{ BRAND_NAME }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; background: white; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6 sm:p-10 font-sans text-gray-800">
+
+    <div class="max-w-3xl mx-auto mb-4 no-print flex justify-between items-center">
+        <a href="{% url 'dashboard:order_detail' order_id=order.id %}" class="text-xs text-gray-600 hover:underline">
+            &larr; ড্যাশবোর্ডে ফিরুন
+        </a>
+        <button onclick="window.print()" class="px-4 py-2 bg-emerald-800 text-white rounded-lg text-xs font-bold shadow hover:bg-emerald-900 transition">
+            🖨️ ইনভয়েস প্রিন্ট করুন (Print Memo)
+        </button>
+    </div>
+
+    <div class="max-w-3xl mx-auto bg-white p-8 sm:p-12 rounded-2xl shadow-sm border border-gray-200">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-start border-b-2 border-emerald-900 pb-6">
+            <div>
+                <h1 class="text-3xl font-bold tracking-widest text-emerald-950 uppercase">{{ BRAND_NAME }}</h1>
+                <p class="text-xs text-gray-500 tracking-wider">Artisan Lifestyle & Clothing Atelier</p>
+                <p class="text-xs text-gray-400 mt-1">{{ OFFICE_ADDRESS }}</p>
+                <p class="text-xs text-gray-400">হটলাইন: {{ HOTLINE }}</p>
+            </div>
+            <div class="text-right">
+                <span class="inline-block bg-emerald-900 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wider">
+                    ক্যাশ মেমো / ইনভয়েস
+                </span>
+                <p class="text-sm font-mono font-bold text-gray-900 mt-2">#{{ order.order_number }}</p>
+                <p class="text-xs text-gray-500">তারিখ: {{ order.created_at|date:"d F, Y" }}</p>
+            </div>
+        </div>
+
+        <!-- Bill To -->
+        <div class="grid grid-cols-2 gap-6 py-6 text-xs border-b border-gray-100">
+            <div>
+                <span class="font-bold uppercase text-gray-400 text-[10px] block mb-1">গ্রাহকের বিবরণ (Bill To):</span>
+                <h3 class="font-bold text-sm text-gray-900">{{ order.full_name }}</h3>
+                <p class="font-mono text-gray-700 mt-0.5">মোবাইল: {{ order.phone }}</p>
+                {% if order.email %}<p class="text-gray-500">ইমেইল: {{ order.email }}</p>{% endif %}
+                <p class="text-gray-600 mt-1 leading-relaxed">{{ order.delivery_address }}, {{ order.district }}, {{ order.division }}</p>
+            </div>
+            <div class="text-right">
+                <span class="font-bold uppercase text-gray-400 text-[10px] block mb-1">পেমেন্ট ও শিপিং:</span>
+                <p>মেথড: <strong>{{ order.get_payment_method_display }}</strong></p>
+                <p>পেমেন্ট স্ট্যাটাস: <strong class="uppercase">{{ order.get_payment_status_display }}</strong></p>
+                {% if order.trx_id %}<p>TrxID: <span class="font-mono font-bold">{{ order.trx_id }}</span></p>{% endif %}
+                {% if order.courier_tracking_id %}<p>কুরিয়ার কনসাইনমেন্ট: <span class="font-mono font-bold">{{ order.courier_tracking_id }}</span></p>{% endif %}
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="py-6">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 font-bold uppercase text-[10px] border-b">
+                        <th class="py-2.5 px-3">ক্রমিক</th>
+                        <th class="py-2.5 px-3">পোশাকের বিবরণ ও সাইজ</th>
+                        <th class="py-2.5 px-3 text-center">পরিমাণ</th>
+                        <th class="py-2.5 px-3 text-right">দর (৳)</th>
+                        <th class="py-2.5 px-3 text-right">মোট (৳)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td class="py-3 px-3 text-gray-400 font-mono">{{ forloop.counter }}</td>
+                        <td class="py-3 px-3">
+                            <span class="font-bold text-gray-900">{{ item.product_name }}</span>
+                            <span class="text-gray-500 block text-[11px]">সাইজ: {{ item.size }} | SKU: {{ item.product_sku }}</span>
+                        </td>
+                        <td class="py-3 px-3 text-center font-bold">{{ item.quantity }}</td>
+                        <td class="py-3 px-3 text-right">৳{{ item.price }}</td>
+                        <td class="py-3 px-3 text-right font-bold text-gray-900">৳{{ item.subtotal }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Calculations -->
+        <div class="flex justify-end pt-4 border-t border-gray-200 text-xs">
+            <div class="w-64 space-y-2">
+                <div class="flex justify-between text-gray-600">
+                    <span>পোশাকের মূল্য:</span>
+                    <span class="font-bold text-gray-900">৳{{ order.subtotal }}</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                <div class="flex justify-between text-emerald-700 font-bold">
+                    <span>কুপন ছাড় ({{ order.coupon_code }}):</span>
+                    <span>-৳{{ order.discount_amount }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between text-gray-600">
+                    <span>ডেলিভারি চার্জ:</span>
+                    <span class="font-bold text-gray-900">৳{{ order.shipping_cost }}</span>
+                </div>
+                <div class="flex justify-between pt-2 border-t-2 border-emerald-900 text-base font-bold text-emerald-950">
+                    <span>সর্বমোট টাকা:</span>
+                    <span>৳{{ order.total_amount }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Notice -->
+        <div class="mt-12 pt-6 border-t border-gray-200 text-center text-[10px] text-gray-400 space-y-1">
+            <p>পণ্য গ্রহণের সময় অনুগ্রহ করে ডেলিভারিম্যানের সামনে চেক করে নিন।</p>
+            <p>আমাদের সাথে থাকার জন্য ধন্যবাদ! {{ BRAND_NAME }} Atelier Dhaka • www.ahmz-clothing.com</p>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ BRAND_NAME }} | খাঁটি বাংলাদেশি বুনন ও উৎসব কালেকশন ২০২৬{% endblock %}
+
+{% block content %}
+
+<!-- Hero Banner (Luxury Dhaka Fashion) -->
+<section class="relative bg-gradient-to-r from-gray-950 via-brand-emerald-dark to-brand-emerald text-white overflow-hidden py-16 md:py-24">
+    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#c59b27_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            <!-- Left Hero Content -->
+            <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                <div class="inline-flex items-center space-x-2 bg-brand-gold/20 border border-brand-gold/40 text-brand-gold px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider">
+                    <span class="w-2 h-2 rounded-full bg-brand-gold animate-ping"></span>
+                    <span>{{ T.hero_badge }}</span>
+                </div>
+                
+                <h1 class="font-brand-serif text-3xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-white">
+                    {{ T.hero_title_1 }} <br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-brand-gold to-yellow-100">
+                        {{ T.hero_title_2 }}
+                    </span>
+                </h1>
+                
+                <p class="text-gray-300 text-sm sm:text-base max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
+                    {{ T.hero_desc }}
+                </p>
+
+                <!-- Action CTAs -->
+                <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                    <a href="{% url 'store:product_list' %}?gender=men" 
+                       class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-brand-gold hover:bg-brand-gold-light text-gray-950 font-bold text-sm tracking-wide transition shadow-lg shadow-amber-500/20 text-center">
+                        {{ T.view_panjabi }} <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </a>
+                    <a href="{% url 'store:product_list' %}?gender=women" 
+                       class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium text-sm tracking-wide border border-white/20 backdrop-blur-sm transition text-center">
+                        {{ T.view_saree }}
+                    </a>
+                </div>
+
+                <!-- BD Trust Badges Row -->
+                <div class="pt-6 grid grid-cols-3 gap-4 border-t border-white/10 text-center lg:text-left">
+                    <div>
+                        <p class="font-bold text-lg text-white">৳৬০</p>
+                        <p class="text-xs text-gray-400">ঢাকা হোম ডেলিভারি</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-lg text-white">২৪-৪৮ ঘণ্টা</p>
+                        <p class="text-xs text-gray-400">দ্রুততম পৌঁছানোর নিশ্চয়তা</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-lg text-white">ক্যাশ অন</p>
+                        <p class="text-xs text-gray-400">সারা দেশে ডেলিভারি</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Hero Visual Showcase (Auto-Rotating in a small interval) -->
+            <div class="lg:col-span-5 relative" id="heroShowcaseContainer">
+                <div class="relative mx-auto max-w-md">
+                    <!-- Decorative back glow -->
+                    <div class="absolute -inset-1.5 bg-gradient-to-tr from-brand-gold to-emerald-500 rounded-3xl blur-xl opacity-30"></div>
+                    
+                    <div class="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 aspect-[4/5] bg-gray-900 group">
+                        
+                        <!-- Slide Indicators Dots -->
+                        <div class="absolute top-4 right-4 z-20 flex space-x-1.5 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15">
+                            {% for p in hero_showcase_products %}
+                                <button type="button" onclick="setHeroSlide({{ forloop.counter0 }})" 
+                                        class="hero-indicator h-2 rounded-full transition-all duration-300 {% if forloop.first %}bg-brand-gold w-5{% else %}bg-white/40 w-2{% endif %}"
+                                        title="{{ p.name }}"></button>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Product Slides -->
+                        {% for p in hero_showcase_products %}
+                        <div class="hero-slide absolute inset-0 transition-opacity duration-700 ease-in-out {% if forloop.first %}opacity-100 z-10{% else %}opacity-0 pointer-events-none z-0{% endif %}" 
+                             data-index="{{ forloop.counter0 }}">
+                            <img src="{{ p.primary_image }}" 
+                                 alt="{{ p.name }}" 
+                                 class="w-full h-full object-cover transform hover:scale-105 transition duration-700">
+                            
+                            <div class="absolute bottom-4 left-4 right-4 bg-gray-950/85 backdrop-blur-md p-4 rounded-xl border border-white/15 flex items-center justify-between shadow-xl">
+                                <div class="pr-2">
+                                    <span class="text-[10px] text-brand-gold font-bold uppercase tracking-wider block">
+                                        {% if p.is_eid_special %}{{ T.eid_special }}{% else %}{{ p.category.name }}{% endif %}
+                                    </span>
+                                    <h4 class="text-white text-sm font-semibold truncate max-w-[190px] sm:max-w-[230px]">
+                                        {{ p.name }}
+                                    </h4>
+                                    <p class="text-xs text-gray-300">
+                                        <strong class="text-white">৳{{ p.get_price }}</strong>
+                                        {% if p.has_discount %}
+                                            <span class="line-through text-gray-400 text-[10px] ml-1">৳{{ p.regular_price }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <a href="{% url 'store:product_detail' slug=p.slug %}" 
+                                   class="bg-brand-gold hover:bg-yellow-400 text-gray-950 px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center whitespace-nowrap shadow">
+                                    {% if CURRENT_LANG == 'en' %}Order{% else %}অর্ডার করুন{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="hero-slide absolute inset-0">
+                            <img src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=900&auto=format&fit=crop&q=80" 
+                                 alt="Bangladeshi Festive Panjabi" 
+                                 class="w-full h-full object-cover">
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- Featured Categories Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row justify-between items-baseline mb-10 pb-4 border-b border-gray-100">
+            <div>
+                <span class="text-brand-emerald text-xs font-bold tracking-widest uppercase">{% if CURRENT_LANG == 'en' %}Finest Craftsmanship{% else %}আভিজাত্যের সমাহার{% endif %}</span>
+                <h2 class="font-brand-serif text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{{ T.browse_categories }}</h2>
+            </div>
+            <a href="{% url 'store:product_list' %}" class="text-brand-emerald hover:text-brand-600 font-semibold text-xs mt-2 sm:mt-0 flex items-center">
+                {{ T.all_collections }} <i class="fa-solid fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            {% for cat in featured_categories %}
+            <a href="{% url 'store:product_list' %}?category={{ cat.slug }}" 
+               class="group relative rounded-2xl overflow-hidden aspect-[3/4] shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100">
+                <img src="{{ cat.image }}" 
+                     alt="{{ cat.name }}" 
+                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-gray-900/20 to-transparent"></div>
+                <div class="absolute bottom-4 left-4 right-4">
+                    <span class="text-[10px] uppercase font-bold text-amber-300 tracking-wider">
+                        {{ cat.get_gender_display }}
+                    </span>
+                    <h3 class="text-white font-bold text-base sm:text-lg group-hover:text-amber-200 transition">
+                        {{ cat.name }}
+                    </h3>
+                    <p class="text-[11px] text-gray-300 mt-0.5 line-clamp-1">{{ cat.description }}</p>
+                </div>
+            </a>
+            {% empty %}
+            <div class="col-span-4 text-center py-8 text-gray-500">
+                Loading categories...
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+<!-- Eid Special Showcase (উৎসব স্পেশাল) -->
+<section class="py-16 bg-amber-50/50 border-y border-amber-100/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10">
+            <div>
+                <span class="bg-amber-100 text-brand-700 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    ✨ {% if CURRENT_LANG == 'en' %}Special Festive Drop{% else %}স্পেশাল ফেস্টিভ ড্রপ{% endif %}
+                </span>
+                <h2 class="font-brand-serif text-2xl sm:text-4xl font-bold text-gray-900 mt-2">
+                    {{ T.eid_collection_2026 }}
+                </h2>
+                <p class="text-xs sm:text-sm text-gray-600 mt-1">{{ T.eid_collection_subtitle }}</p>
+            </div>
+            <a href="{% url 'store:product_list' %}?gender=men" class="mt-4 md:mt-0 px-5 py-2.5 rounded-lg bg-brand-emerald text-white text-xs font-semibold hover:bg-brand-emerald-dark transition flex items-center shadow-sm">
+                {{ T.view_all_panjabi }} <i class="fa-solid fa-arrow-right ml-2 text-[10px]"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for product in eid_specials %}
+                {% include 'store/includes/product_card.html' with product=product %}
+            {% empty %}
+                <p class="col-span-4 text-center text-gray-500">কোনো পণ্য পাওয়া যায়নি।</p>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+
+
+<!-- New Arrivals Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <span class="text-brand-emerald text-xs font-bold uppercase tracking-wider">নতুন ডিজাইন</span>
+                <h2 class="font-brand-serif text-2xl sm:text-3xl font-bold text-gray-900 mt-1">নতুন আগমন (New Arrivals)</h2>
+            </div>
+            <a href="{% url 'store:product_list' %}" class="text-xs font-semibold text-brand-emerald hover:underline">
+                সকল পণ্য দেখুন &rarr;
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for product in new_arrivals %}
+                {% include 'store/includes/product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+<!-- Brand Craftsmanship Banner (The Dhaka Artisan Story) -->
+<section class="py-16 bg-brand-emerald text-white relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6">
+                <span class="text-brand-gold text-xs font-bold uppercase tracking-widest">খাঁটি বুনন কারিগরী</span>
+                <h2 class="font-brand-serif text-3xl sm:text-4xl font-bold text-white leading-snug">
+                    তাঁত ও সুই-সুতোর <br>আভিজাত্য আপনার দরজায়
+                </h2>
+                <p class="text-sm text-gray-200 leading-relaxed font-light">
+                    {{ BRAND_NAME }} প্রতিটি পোশাকে তুলে ধরে বাংলার শতবর্ষী ঐতিহ্যের ছোঁয়া। আমাদের প্রতিটি পাঞ্জাবি শতভাগ খাঁটি সুতি ফেব্রিক, নিখুঁত কাটিং এবং নিখাদ আরামের প্রতিশ্রুতির সাথে সরাসরি নিজস্ব কারখানায় প্রস্তুত করা হয়।
+                </p>
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+                        <i class="fa-solid fa-certificate text-brand-gold text-xl mb-1"></i>
+                        <h4 class="font-bold text-sm">১০০% অর্গানিক ফেব্রিক</h4>
+                        <p class="text-xs text-gray-300">কোনো কৃত্রিম বা ক্ষতিকর রং নেই</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+                        <i class="fa-solid fa-scissors text-brand-gold text-xl mb-1"></i>
+                        <h4 class="font-bold text-sm">দক্ষ কারিগরের কাজ</h4>
+                        <p class="text-xs text-gray-300">নিখুঁত বোতাম, কলার ও বুনন</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative">
+                <div class="grid grid-cols-2 gap-4">
+                    <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80" 
+                         alt="Jamdani Weaving" 
+                         class="rounded-2xl object-cover h-64 sm:h-72 w-full shadow-lg border border-white/10">
+                    <img src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop&q=80" 
+                         alt="Fine Cotton Shirt Fabric" 
+                         class="rounded-2xl object-cover h-64 sm:h-72 w-full shadow-lg border border-white/10 mt-6">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Customer Reviews & Testimonials -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <span class="text-brand-emerald text-xs font-bold uppercase tracking-widest">গ্রাহকের সন্তুষ্টি</span>
+            <h2 class="font-brand-serif text-2xl sm:text-3xl font-bold text-gray-900 mt-1">আমাদের সম্মানিত গ্রাহকদের মতামত</h2>
+            <p class="text-xs sm:text-sm text-gray-500 mt-2">সারা দেশ থেকে হাজারো সন্তুষ্ট গ্রাহকের অভিজ্ঞতা</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for review in recent_reviews %}
+            <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center text-amber-400 text-xs mb-3">
+                        {% for i in "12345" %}
+                            <i class="fa-solid fa-star"></i>
+                        {% endfor %}
+                    </div>
+                    <p class="text-xs text-gray-700 italic leading-relaxed">"{{ review.comment }}"</p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-900">{{ review.name }}</h4>
+                        <span class="text-[10px] text-gray-500">{{ review.city }}</span>
+                    </div>
+                    <span class="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full flex items-center">
+                        <i class="fa-solid fa-badge-check mr-1"></i> ভেরিফাইড
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-3 text-center text-gray-500">রিভিউ লোড হচ্ছে...</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentHeroIndex = 0;
+    const heroSlides = document.querySelectorAll('.hero-slide');
+    const heroIndicators = document.querySelectorAll('.hero-indicator');
+    let heroTimer = null;
+
+    function showHeroSlide(index) {
+        if (!heroSlides.length) return;
+        currentHeroIndex = (index + heroSlides.length) % heroSlides.length;
+
+        heroSlides.forEach((slide, i) => {
+            if (i === currentHeroIndex) {
+                slide.classList.remove('opacity-0', 'pointer-events-none', 'z-0');
+                slide.classList.add('opacity-100', 'z-10');
+            } else {
+                slide.classList.remove('opacity-100', 'z-10');
+                slide.classList.add('opacity-0', 'pointer-events-none', 'z-0');
+            }
+        });
+
+        heroIndicators.forEach((dot, i) => {
+            if (i === currentHeroIndex) {
+                dot.classList.add('bg-brand-gold', 'w-5');
+                dot.classList.remove('bg-white/40', 'w-2');
+            } else {
+                dot.classList.remove('bg-brand-gold', 'w-5');
+                dot.classList.add('bg-white/40', 'w-2');
+            }
+        });
+    }
+
+    function setHeroSlide(index) {
+        showHeroSlide(index);
+        resetHeroTimer();
+    }
+
+    function nextHeroSlide() {
+        showHeroSlide(currentHeroIndex + 1);
+    }
+
+    function startHeroTimer() {
+        if (heroTimer) clearInterval(heroTimer);
+        // Change product every 3 seconds (small time)
+        heroTimer = setInterval(nextHeroSlide, 3000);
+    }
+
+    function resetHeroTimer() {
+        if (heroTimer) clearInterval(heroTimer);
+        startHeroTimer();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (heroSlides.length > 1) {
+            startHeroTimer();
+            const container = document.getElementById('heroShowcaseContainer');
+            if (container) {
+                // Pause rotation on hover so customer can click order button
+                container.addEventListener('mouseenter', () => {
+                    if (heroTimer) clearInterval(heroTimer);
+                });
+                container.addEventListener('mouseleave', () => {
+                    startHeroTimer();
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

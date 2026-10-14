@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}আমার প্রোফাইল ও অর্ডার হিস্ট্রি | {{ BRAND_NAME }}{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 border-b border-gray-200 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="font-brand-serif text-2xl sm:text-3xl font-bold text-gray-900">স্বাগতম, {{ user.first_name|default:user.username }}!</h1>
+            <p class="text-xs text-gray-500 mt-1">আপনার অ্যাকাউন্ট ও অর্ডার হিস্ট্রি পরিচালনা করুন</p>
+        </div>
+        <a href="{% url 'accounts:logout' %}" class="px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-semibold transition flex items-center">
+            <i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> লগআউট
+        </a>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Update Profile (4 cols) -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+                <div class="flex items-center space-x-3 pb-4 border-b border-gray-100">
+                    <div class="w-12 h-12 rounded-full bg-brand-emerald text-white text-lg font-bold flex items-center justify-center">
+                        {{ user.first_name|slice:":1"|default:user.username|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-gray-900">{{ user.first_name }} {{ user.last_name }}</h3>
+                        <p class="text-xs text-gray-500">@{{ user.username }}</p>
+                    </div>
+                </div>
+
+                <form method="POST" class="space-y-3 text-xs">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">নামের প্রথম অংশ</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">নামের শেষ অংশ</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">মোবাইল নম্বর</label>
+                        <input type="tel" name="phone" value="{{ profile.phone }}" placeholder="01XXXXXXXXX" class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">ইমেইল</label>
+                        <input type="email" name="email" value="{{ user.email }}" class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">জেলা (District)</label>
+                        <input type="text" name="district" value="{{ profile.district }}" class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">ডিফল্ট ডেলিভারি ঠিকানা</label>
+                        <textarea name="address" rows="3" class="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:border-brand-emerald">{{ profile.address }}</textarea>
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 bg-brand-emerald hover:bg-brand-emerald-dark text-white rounded-xl font-bold transition">
+                        তথ্য সংরক্ষণ করুন
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Order History (8 cols) -->
+        <div class="lg:col-span-8 space-y-4">
+            <h2 class="font-brand-serif text-xl font-bold text-gray-900 mb-4">আমার অর্ডারসমূহ (Order History)</h2>
+
+            {% if orders %}
+                <div class="space-y-4">
+                    {% for ord in orders %}
+                    <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-gray-100 gap-2">
+                            <div>
+                                <span class="font-mono text-sm font-bold text-brand-emerald">#{{ ord.order_number }}</span>
+                                <span class="text-xs text-gray-400 ml-2">• {{ ord.created_at|date:"d M, Y - h:i A" }}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs bg-amber-50 text-amber-800 font-bold px-2.5 py-1 rounded-full uppercase">
+                                    {{ ord.get_status_display }}
+                                </span>
+                                <span class="text-xs font-bold text-gray-900">৳{{ ord.total_amount }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Items in order -->
+                        <div class="divide-y divide-gray-50 text-xs">
+                            {% for itm in ord.items.all %}
+                            <div class="py-2 flex justify-between items-center text-gray-700">
+                                <span>{{ itm.quantity }}x {{ itm.product_name }} ({{ itm.size }})</span>
+                                <span class="font-bold">৳{{ itm.subtotal }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="pt-3 border-t border-gray-100 flex flex-wrap justify-between items-center text-xs gap-2">
+                            <span class="text-gray-500">পেমেন্ট: {{ ord.get_payment_method_display }}</span>
+                            <a href="{% url 'store:track_order' %}?order_number={{ ord.order_number }}&phone={{ ord.phone }}" 
+                               class="text-brand-emerald font-bold hover:underline flex items-center">
+                                <i class="fa-solid fa-location-crosshairs mr-1"></i> লাইভ ট্র্যাক করুন &rarr;
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+                    <i class="fa-solid fa-box-open text-4xl text-gray-300 mb-3"></i>
+                    <h3 class="font-bold text-gray-900 text-sm">আপনি এখনো কোনো অর্ডার করেননি</h3>
+                    <p class="text-xs text-gray-500 mt-1 mb-4">আমাদের নতুন পোশাক সম্ভার থেকে পছন্দের পোশাকটি অর্ডার করুন।</p>
+                    <a href="{% url 'store:product_list' %}" class="px-5 py-2.5 bg-brand-emerald text-white rounded-xl text-xs font-bold">
+                        কেনাকাটা শুরু করুন
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

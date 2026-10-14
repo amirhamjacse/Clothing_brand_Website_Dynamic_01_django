@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ BRAND_NAME }} | Artisan Clothing & Lifestyle{% endblock %}</title>
+    
+    <!-- Google Fonts (Noto Serif Bengali for royal headings, Hind Siliguri for crisp Bangla, Plus Jakarta Sans, Cinzel) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Serif+Bengali:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf8f6',
+                            100: '#f2e8e5',
+                            500: '#9b2c2c',
+                            600: '#7f1d1d',
+                            700: '#5c1313',
+                            800: '#420d0d',
+                            900: '#2b0707',
+                            emerald: '#0c3527',
+                            'emerald-dark': '#062017',
+                            gold: '#c59b27',
+                            'gold-light': '#dfb84b'
+                        },
+                        bKash: '#e2136e',
+                        nagad: '#f7941d'
+                    },
+                    fontFamily: {
+                        sans: ['"Hind Siliguri"', '"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['"Noto Serif Bengali"', '"Cinzel"', 'serif'],
+                        bangla: ['"Hind Siliguri"', 'sans-serif'],
+                        'bangla-serif': ['"Noto Serif Bengali"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif;
+            background-color: #faf9f6;
+            color: #1f2937;
+        }
+        .font-brand-serif {
+            font-family: 'Noto Serif Bengali', 'Cinzel', serif;
+        }
+        /* Hide scrollbars for horizontal carousel */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .badge-pulse {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.9; }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex flex-col min-h-screen pb-16 md:pb-0">
+
+    <!-- Top Announcement Bar (Bangladeshi Context) -->
+    <div class="bg-brand-emerald text-white text-xs py-2 px-4 text-center tracking-wide flex justify-between items-center border-b border-emerald-800">
+        <div class="hidden md:flex items-center space-x-4">
+            <span><i class="fa-solid fa-truck-fast mr-1 text-brand-gold"></i> {{ T.cod_all_bd }}</span>
+            <span class="text-emerald-400">|</span>
+            <span><i class="fa-solid fa-phone mr-1 text-brand-gold"></i> {{ T.helpline }}: {{ HOTLINE }}</span>
+        </div>
+        <div class="mx-auto md:mx-0 font-medium">
+            {{ T.announcement }}
+        </div>
+        <div class="flex items-center space-x-3 text-xs">
+            <!-- Language Switcher Pill -->
+            <div class="flex items-center space-x-0.5 bg-black/30 p-0.5 rounded-full border border-white/20 text-[11px] font-bold">
+                <a href="{% url 'store:switch_language' lang='bn' %}" 
+                   class="px-2 py-0.5 rounded-full transition {% if CURRENT_LANG == 'bn' %}bg-brand-gold text-gray-950 shadow-sm{% else %}text-emerald-100 hover:text-white{% endif %}" title="বাংলায় পরিবর্তন করুন">
+                   বাংলা
+                </a>
+                <a href="{% url 'store:switch_language' lang='en' %}" 
+                   class="px-2 py-0.5 rounded-full transition {% if CURRENT_LANG == 'en' %}bg-brand-gold text-gray-950 shadow-sm{% else %}text-emerald-100 hover:text-white{% endif %}" title="Switch to English">
+                   EN
+                </a>
+            </div>
+
+            <span class="hidden md:inline text-emerald-400">|</span>
+            <a href="{% url 'store:track_order' %}" class="hidden md:inline hover:text-brand-gold transition"><i class="fa-solid fa-location-crosshairs mr-1"></i> {{ T.track_order }}</a>
+            <span class="hidden md:inline text-emerald-400">|</span>
+            <a href="{% url 'dashboard:index' %}" class="hidden md:inline bg-brand-gold/20 hover:bg-brand-gold text-amber-200 hover:text-gray-900 px-2 py-0.5 rounded font-semibold transition"><i class="fa-solid fa-gauge-high mr-1"></i> {{ T.dashboard }}</a>
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Mobile Menu Button -->
+                <div class="flex items-center md:hidden">
+                    <button id="mobileMenuBtn" type="button" class="text-gray-700 hover:text-brand-emerald p-2 text-xl">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+
+                <!-- Brand Logo -->
+                <div class="flex items-center">
+                    <a href="{% url 'store:home' %}" class="flex flex-col items-center group">
+                        <span class="font-brand-serif text-2xl md:text-3xl font-bold tracking-widest text-brand-emerald group-hover:text-brand-600 transition">
+                            {{ BRAND_NAME }}
+                        </span>
+                        <span class="text-[9px] uppercase tracking-[0.28em] text-gray-500 font-medium">Atelier Dhaka</span>
+                    </a>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center space-x-7 text-sm font-medium text-gray-800">
+                    <a href="{% url 'store:home' %}" class="hover:text-brand-emerald transition hover:underline underline-offset-8">{{ T.home }}</a>
+                    <a href="{% url 'store:product_list' %}" class="hover:text-brand-emerald transition hover:underline underline-offset-8">{{ T.shop_all }}</a>
+                    <a href="{% url 'store:product_list' %}?gender=men" class="hover:text-brand-emerald transition">{{ T.men_panjabi }}</a>
+                    <a href="{% url 'store:product_list' %}?gender=women" class="hover:text-brand-emerald transition">{{ T.women_saree }}</a>
+                    <a href="{% url 'store:product_list' %}?gender=unisex" class="hover:text-brand-emerald transition">{{ T.casual_tees }}</a>
+                    <a href="{% url 'store:track_order' %}" class="text-brand-emerald font-semibold hover:text-brand-gold transition flex items-center">
+                        <i class="fa-solid fa-box-open mr-1.5 text-brand-gold"></i> {{ T.track_order }}
+                    </a>
+                </nav>
+
+                <!-- Search & Actions -->
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <!-- Search bar trigger -->
+                    <form action="{% url 'store:product_list' %}" method="GET" class="hidden lg:flex items-center relative">
+                        <input type="text" name="q" placeholder="{{ T.search_placeholder }}" 
+                               class="pl-9 pr-4 py-1.5 text-xs bg-gray-100 hover:bg-gray-50 focus:bg-white rounded-full border border-gray-200 focus:border-brand-emerald focus:ring-1 focus:ring-brand-emerald outline-none w-48 transition-all duration-300 focus:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 text-gray-400 text-xs"></i>
+                    </form>
+
+                    <!-- Language Switcher in Header (Compact for Desktop & Tablet) -->
+                    <div class="hidden sm:flex items-center border border-gray-200 rounded-lg p-0.5 text-xs bg-gray-50">
+                        <a href="{% url 'store:switch_language' lang='bn' %}" 
+                           class="px-2 py-1 rounded transition font-bold {% if CURRENT_LANG == 'bn' %}bg-brand-emerald text-white{% else %}text-gray-600 hover:text-gray-900{% endif %}">
+                            বাং
+                        </a>
+                        <a href="{% url 'store:switch_language' lang='en' %}" 
+                           class="px-2 py-1 rounded transition font-bold {% if CURRENT_LANG == 'en' %}bg-brand-emerald text-white{% else %}text-gray-600 hover:text-gray-900{% endif %}">
+                            EN
+                        </a>
+                    </div>
+
+                    <!-- User Account -->
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'accounts:profile' %}" class="text-gray-700 hover:text-brand-emerald flex items-center text-sm font-medium">
+                            <i class="fa-regular fa-user text-lg mr-1"></i>
+                            <span class="hidden xl:inline">{{ user.first_name|default:user.username }}</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="text-gray-700 hover:text-brand-emerald text-sm font-medium flex items-center" title="লগইন বা রেজিস্টার">
+                            <i class="fa-regular fa-user text-lg"></i>
+                            <span class="hidden md:inline ml-1 text-xs">{{ T.login }}</span>
+                        </a>
+                    {% endif %}
+
+                    <!-- Dashboard Quick Jump (Always visible for easy testing) -->
+                    <a href="{% url 'dashboard:index' %}" class="text-xs bg-emerald-50 text-brand-emerald border border-brand-emerald/30 hover:bg-brand-emerald hover:text-white px-2.5 py-1.5 rounded-md font-semibold transition flex items-center">
+                        <i class="fa-solid fa-gauge-high mr-1"></i> 
+                        <span class="hidden sm:inline">{% if CURRENT_LANG == 'en' %}Admin{% else %}অ্যাডমিন{% endif %}</span>
+                    </a>
+
+                    <!-- Shopping Bag / Cart -->
+                    <a href="{% url 'store:cart_detail' %}" class="relative bg-brand-emerald text-white p-2.5 rounded-full hover:bg-brand-emerald-dark transition flex items-center justify-center shadow-md">
+                        <i class="fa-solid fa-bag-shopping text-sm"></i>
+                        {% if cart_count > 0 %}
+                            <span class="absolute -top-1 -right-1 bg-brand-gold text-gray-900 font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white badge-pulse">
+                                {{ cart_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-b border-gray-200 px-6 py-4 space-y-3">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <span class="text-xs font-bold text-gray-500">ভাষা / Language:</span>
+                <div class="flex items-center space-x-1">
+                    <a href="{% url 'store:switch_language' lang='bn' %}" 
+                       class="px-3 py-1 rounded-lg text-xs font-bold {% if CURRENT_LANG == 'bn' %}bg-brand-emerald text-white{% else %}bg-gray-100 text-gray-700{% endif %}">
+                        বাংলা
+                    </a>
+                    <a href="{% url 'store:switch_language' lang='en' %}" 
+                       class="px-3 py-1 rounded-lg text-xs font-bold {% if CURRENT_LANG == 'en' %}bg-brand-emerald text-white{% else %}bg-gray-100 text-gray-700{% endif %}">
+                        English
+                    </a>
+                </div>
+            </div>
+
+            <form action="{% url 'store:product_list' %}" method="GET" class="flex items-center relative mb-4">
+                <input type="text" name="q" placeholder="{{ T.search_placeholder }}" 
+                       class="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200 outline-none">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 text-gray-400 text-sm"></i>
+            </form>
+            <a href="{% url 'store:home' %}" class="block py-2 text-gray-800 font-medium border-b border-gray-100">{{ T.home }}</a>
+            <a href="{% url 'store:product_list' %}" class="block py-2 text-gray-800 font-medium border-b border-gray-100">{{ T.shop_all }}</a>
+            <a href="{% url 'store:product_list' %}?gender=men" class="block py-2 text-gray-800 font-medium border-b border-gray-100">{{ T.men_panjabi }}</a>
+            <a href="{% url 'store:product_list' %}?gender=women" class="block py-2 text-gray-800 font-medium border-b border-gray-100">{{ T.women_saree }}</a>
+            <a href="{% url 'store:product_list' %}?gender=unisex" class="block py-2 text-gray-800 font-medium border-b border-gray-100">{{ T.casual_tees }}</a>
+            <a href="{% url 'store:track_order' %}" class="block py-2 text-brand-emerald font-semibold border-b border-gray-100">{{ T.track_order }}</a>
+            <a href="{% url 'dashboard:index' %}" class="block py-2 text-amber-700 font-semibold">{{ T.dashboard }}</a>
+        </div>
+    </header>
+
+    <!-- Global Toast / Django Messages Notification Banner -->
+    {% if messages %}
+    <div class="max-w-4xl mx-auto px-4 mt-4 w-full">
+        {% for message in messages %}
+            <div class="p-4 mb-3 rounded-xl border flex items-center justify-between text-sm shadow-sm transition-all duration-300
+                {% if message.tags == 'success' %}bg-emerald-50 text-emerald-900 border-emerald-200
+                {% elif message.tags == 'error' %}bg-rose-50 text-rose-900 border-rose-200
+                {% elif message.tags == 'warning' %}bg-amber-50 text-amber-900 border-amber-200
+                {% else %}bg-blue-50 text-blue-900 border-blue-200{% endif %}">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid 
+                        {% if message.tags == 'success' %}fa-circle-check text-emerald-600
+                        {% elif message.tags == 'error' %}fa-triangle-exclamation text-rose-600
+                        {% elif message.tags == 'warning' %}fa-bell text-amber-600
+                        {% else %}fa-circle-info text-blue-600{% endif %} text-lg"></i>
+                    <span>{{ message }}</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content Slot -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bangladeshi E-Commerce Footer -->
+    <footer class="bg-gray-900 text-gray-300 pt-16 pb-12 mt-20 border-t-4 border-brand-gold">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <!-- Value Proposition Badges -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 pb-12 border-b border-gray-800 text-center">
+                <div class="p-4 rounded-xl bg-gray-800/40">
+                    <i class="fa-solid fa-truck text-2xl text-brand-gold mb-2"></i>
+                    <h4 class="text-white text-sm font-semibold">{{ T.footer_trust_1_title }}</h4>
+                    <p class="text-xs text-gray-400 mt-1">{{ T.footer_trust_1_desc }}</p>
+                </div>
+                <div class="p-4 rounded-xl bg-gray-800/40">
+                    <i class="fa-solid fa-hand-holding-dollar text-2xl text-brand-gold mb-2"></i>
+                    <h4 class="text-white text-sm font-semibold">{{ T.footer_trust_2_title }}</h4>
+                    <p class="text-xs text-gray-400 mt-1">{{ T.footer_trust_2_desc }}</p>
+                </div>
+                <div class="p-4 rounded-xl bg-gray-800/40">
+                    <i class="fa-solid fa-arrow-rotate-left text-2xl text-brand-gold mb-2"></i>
+                    <h4 class="text-white text-sm font-semibold">{{ T.footer_trust_3_title }}</h4>
+                    <p class="text-xs text-gray-400 mt-1">{{ T.footer_trust_3_desc }}</p>
+                </div>
+                <div class="p-4 rounded-xl bg-gray-800/40">
+                    <i class="fa-solid fa-shield-halved text-2xl text-brand-gold mb-2"></i>
+                    <h4 class="text-white text-sm font-semibold">{{ T.footer_trust_4_title }}</h4>
+                    <p class="text-xs text-gray-400 mt-1">{{ T.footer_trust_4_desc }}</p>
+                </div>
+            </div>
+
+            <!-- Footer Columns -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-10 py-12">
+                <!-- Col 1: Brand Info -->
+                <div class="space-y-4">
+                    <span class="font-brand-serif text-2xl font-bold tracking-widest text-white">{{ BRAND_NAME }}</span>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        ঐতিহ্যবাহী বাংলাদেশি বুনন ও আধুনিক লাইফস্টাইলের এক অপূর্ব মেলবন্ধন। খাঁটি সুতি পাঞ্জাবি, ঐতিহ্যবাহী জামদানি শাড়ি এবং প্রিমিয়াম ক্যাজুয়াল ওয়্যার।
+                    </p>
+                    <div class="text-xs text-gray-400 space-y-1">
+                        <p><i class="fa-solid fa-location-dot text-brand-gold mr-2"></i> {{ OFFICE_ADDRESS }}</p>
+                        <p><i class="fa-solid fa-phone text-brand-gold mr-2"></i> {{ HOTLINE }}</p>
+                        <p><i class="fa-solid fa-envelope text-brand-gold mr-2"></i> support@ahmz-lifestyle.com</p>
+                    </div>
+                </div>
+
+                <!-- Col 2: Quick Links -->
+                <div>
+                    <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-4">ক্যাটেগরি</h3>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="{% url 'store:product_list' %}?gender=men" class="hover:text-brand-gold transition">প্রিমিয়াম পাঞ্জাবি ও কাবলি</a></li>
+                        <li><a href="{% url 'store:product_list' %}?gender=women" class="hover:text-brand-gold transition">ঐতিহ্যবাহী জামদানি ও সিল্ক শাড়ি</a></li>
+                        <li><a href="{% url 'store:product_list' %}?gender=women" class="hover:text-brand-gold transition">সালোয়ার কামিজ ও ডিজাইনার কুর্তি</a></li>
+                        <li><a href="{% url 'store:product_list' %}?gender=unisex" class="hover:text-brand-gold transition">এক্সক্লুসিভ পোলো ও টি-শার্ট</a></li>
+                        <li><a href="{% url 'store:product_list' %}" class="hover:text-brand-gold transition">ঈদ কালেকশন ২০২৬</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Customer Care -->
+                <div>
+                    <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-4">সহায়তা ও সেবা</h3>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="{% url 'store:track_order' %}" class="text-amber-400 hover:text-white font-medium transition"><i class="fa-solid fa-truck-ramp-box mr-1"></i> অর্ডার ট্র্যাকিং</a></li>
+                        <li><a href="#" class="hover:text-brand-gold transition">সাইজ গাইড ও চার্ট</a></li>
+                        <li><a href="#" class="hover:text-brand-gold transition">ডেলিভারি ও শিপিং পলিসি</a></li>
+                        <li><a href="#" class="hover:text-brand-gold transition">রিটার্ন ও এক্সচেঞ্জ নিয়মাবলী</a></li>
+                        <li><a href="{% url 'dashboard:index' %}" class="hover:text-brand-gold transition">শপ ম্যানেজার ড্যাশবোর্ড</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Payments & WhatsApp Support -->
+                <div class="space-y-4">
+                    <h3 class="text-white text-sm font-semibold uppercase tracking-wider">পেমেন্ট মেথড</h3>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="bg-[#e2136e] text-white px-2.5 py-1 rounded font-bold">bKash বিকাশ</span>
+                        <span class="bg-[#f7941d] text-white px-2.5 py-1 rounded font-bold">Nagad নগদ</span>
+                        <span class="bg-[#8b2b91] text-white px-2.5 py-1 rounded font-bold">Rocket</span>
+                        <span class="bg-gray-800 text-gray-200 px-2.5 py-1 rounded font-semibold border border-gray-700">Cash on Delivery</span>
+                    </div>
+
+                    <div class="pt-2">
+                        <p class="text-xs text-gray-400 mb-2">সরাসরি হোয়াটসঅ্যাপে অর্ডার করতে চান?</p>
+                        <a href="https://wa.me/{{ HOTLINE_CLEAN }}?text=Hello%20AHMZ,%20I%20would%20like%20to%20order" 
+                           target="_blank" 
+                           class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-md">
+                            <i class="fa-brands fa-whatsapp text-lg mr-2"></i> WhatsApp অর্ডার: {{ HOTLINE }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright -->
+            <div class="pt-8 mt-4 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+                <p>&copy; 2026 {{ BRAND_NAME }} Atelier Ltd. সর্বস্বত্ব সংরক্ষিত | Made with elegance for Bangladesh.</p>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-gray-300"><i class="fa-brands fa-facebook text-base"></i></a>
+                    <a href="#" class="hover:text-gray-300"><i class="fa-brands fa-instagram text-base"></i></a>
+                    <a href="#" class="hover:text-gray-300"><i class="fa-brands fa-youtube text-base"></i></a>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom App-style Navigation Bar -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden flex justify-around items-center py-2 shadow-lg">
+        <a href="{% url 'store:home' %}" class="flex flex-col items-center text-xs text-gray-600 hover:text-brand-emerald">
+            <i class="fa-solid fa-house text-base"></i>
+            <span class="text-[10px] mt-0.5">{{ T.home }}</span>
+        </a>
+        <a href="{% url 'store:product_list' %}" class="flex flex-col items-center text-xs text-gray-600 hover:text-brand-emerald">
+            <i class="fa-solid fa-shirt text-base"></i>
+            <span class="text-[10px] mt-0.5">{{ T.shop_all }}</span>
+        </a>
+        <a href="{% url 'store:cart_detail' %}" class="flex flex-col items-center text-xs text-brand-emerald relative">
+            <div class="relative">
+                <i class="fa-solid fa-bag-shopping text-base"></i>
+                {% if cart_count > 0 %}
+                    <span class="absolute -top-1 -right-2 bg-brand-gold text-gray-900 font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center">
+                        {{ cart_count }}
+                    </span>
+                {% endif %}
+            </div>
+            <span class="text-[10px] mt-0.5 font-bold">{{ T.bag }} (৳{{ cart_subtotal }})</span>
+        </a>
+        <a href="{% url 'store:track_order' %}" class="flex flex-col items-center text-xs text-gray-600 hover:text-brand-emerald">
+            <i class="fa-solid fa-box-check text-base"></i>
+            <span class="text-[10px] mt-0.5">{{ T.track_order }}</span>
+        </a>
+        <a href="{% if user.is_authenticated %}{% url 'accounts:profile' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="flex flex-col items-center text-xs text-gray-600 hover:text-brand-emerald">
+            <i class="fa-regular fa-user text-base"></i>
+            <span class="text-[10px] mt-0.5">{{ T.profile }}</span>
+        </a>
+    </div>
+
+    <!-- Floating WhatsApp Action -->
+    <a href="https://wa.me/{{ HOTLINE_CLEAN }}?text=Hello%20AHMZ,%20I%20have%20an%20inquiry" 
+       target="_blank" 
+       title="হোয়াটসঅ্যাপে যোগাযোগ করুন"
+       class="fixed bottom-20 md:bottom-8 right-5 z-40 bg-emerald-500 hover:bg-emerald-600 text-white w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition duration-300">
+        <i class="fa-brands fa-whatsapp text-2xl md:text-3xl"></i>
+    </a>
+
+    <script>
+        // Toggle mobile drawer
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

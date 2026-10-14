@@ -1,0 +1,105 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}পোশাক ও ইনভেন্টরি ম্যানেজমেন্ট | ড্যাশবোর্ড{% endblock %}
+{% block dashboard_title %}পোশাক তালিকা ও স্টক ইনভেন্টরি{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+    
+    <!-- Top Action & Filter Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{% url 'dashboard:product_management' %}" 
+               class="px-3 py-1.5 rounded-lg border text-xs font-semibold {% if not stock_filter and not category_id %}bg-slate-900 text-white{% else %}bg-white text-slate-700 hover:bg-slate-50{% endif %}">
+                সকল পোশাক ({{ products.count }})
+            </a>
+            <a href="{% url 'dashboard:product_management' %}?stock=low" 
+               class="px-3 py-1.5 rounded-lg border text-xs font-semibold {% if stock_filter == 'low' %}bg-rose-600 text-white{% else %}bg-white text-rose-700 hover:bg-rose-50{% endif %}">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> লো-স্টক সতর্কতা
+            </a>
+        </div>
+
+        <a href="{% url 'dashboard:product_add' %}" 
+           class="px-4 py-2 bg-brand-emerald hover:bg-brand-emerald-dark text-white rounded-xl text-xs font-bold transition flex items-center shadow-md">
+            <i class="fa-solid fa-plus mr-1.5"></i> নতুন পোশাক যুক্ত করুন
+        </a>
+    </div>
+
+    <!-- Products Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                        <th class="py-3.5 px-4">ছবি ও নাম</th>
+                        <th class="py-3.5 px-4">ক্যাটেগরি ও জেন্ডার</th>
+                        <th class="py-3.5 px-4">ফেব্রিক</th>
+                        <th class="py-3.5 px-4">নিয়মিত মূল্য</th>
+                        <th class="py-3.5 px-4">ছাড়ের মূল্য</th>
+                        <th class="py-3.5 px-4">স্টক সংখ্যা</th>
+                        <th class="py-3.5 px-4">ট্যাগ</th>
+                        <th class="py-3.5 px-4 text-right">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for product in products %}
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center space-x-3">
+                                <img src="{{ product.primary_image }}" alt="{{ product.name }}" class="w-12 h-14 object-cover rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0">
+                                <div>
+                                    <a href="{% url 'store:product_detail' slug=product.slug %}" target="_blank" class="font-bold text-slate-900 hover:text-brand-emerald block">
+                                        {{ product.name }}
+                                    </a>
+                                    <span class="text-[10px] text-slate-400 font-mono">SKU: {{ product.sku }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-700">
+                            <span class="font-semibold block">{{ product.category.name }}</span>
+                            <span class="text-[10px] text-slate-400 capitalize">{{ product.get_gender_display }}</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600 text-[11px]">{{ product.fabric }}</td>
+                        <td class="py-3.5 px-4 font-bold text-slate-900">৳{{ product.regular_price }}</td>
+                        <td class="py-3.5 px-4 font-bold text-emerald-700">
+                            {% if product.discount_price %}
+                                ৳{{ product.discount_price }}
+                                <span class="text-[10px] text-rose-600 font-normal">({{ product.discount_percent }}% ছাড়)</span>
+                            {% else %}
+                                <span class="text-slate-400 font-normal">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold {% if product.stock <= 5 %}bg-rose-100 text-rose-700{% else %}bg-slate-100 text-slate-800{% endif %}">
+                                {{ product.stock }} টি
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 space-y-0.5">
+                            {% if product.is_eid_special %}<span class="inline-block bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded">ঈদ</span>{% endif %}
+                            {% if product.is_new %}<span class="inline-block bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">নতুন</span>{% endif %}
+                            {% if product.is_bestseller %}<span class="inline-block bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5 rounded">সেরা বিক্রয়</span>{% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
+                            <a href="{% url 'dashboard:product_edit' product_id=product.id %}" 
+                               class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="সম্পাদনা">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="{% url 'dashboard:product_delete' product_id=product.id %}" 
+                               onclick="return confirm('আপনি কি নিশ্চিত এই পোশাকটি মুছে ফেলতে চান?')"
+                               class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition" title="ডিলিট">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="p-8 text-center text-slate-400">কোনো পোশাক পাওয়া যায়নি।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

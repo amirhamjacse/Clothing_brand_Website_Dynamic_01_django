@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} | {{ BRAND_NAME }}{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="bg-gray-50 border-b border-gray-200 py-3 text-xs text-gray-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center space-x-2">
+        <a href="{% url 'store:home' %}" class="hover:text-brand-emerald">হোম</a>
+        <span>/</span>
+        <a href="{% url 'store:product_list' %}" class="hover:text-brand-emerald">পোশাক</a>
+        <span>/</span>
+        <a href="{% url 'store:product_list' %}?category={{ product.category.slug }}" class="hover:text-brand-emerald">{{ product.category.name }}</a>
+        <span>/</span>
+        <span class="text-gray-900 font-medium truncate">{{ product.name }}</span>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        <!-- Left: Product Images -->
+        <div class="lg:col-span-6 space-y-4">
+            <div class="relative rounded-2xl overflow-hidden bg-gray-100 aspect-[3/4] border border-gray-100 shadow-md">
+                <img id="mainProductImage" 
+                     src="{{ product.primary_image }}" 
+                     alt="{{ product.name }}" 
+                     class="w-full h-full object-cover transition-all duration-300">
+                
+                <!-- Badges -->
+                <div class="absolute top-4 left-4 flex flex-col gap-1.5">
+                    {% if product.has_discount %}
+                        <span class="bg-rose-600 text-white text-xs font-bold px-3 py-1 rounded-md shadow">
+                            {{ product.discount_percent }}% ছাড় (Save ৳{{ product.regular_price|floatformat:0 }})
+                        </span>
+                    {% endif %}
+                    {% if product.is_eid_special %}
+                        <span class="bg-brand-emerald text-white text-xs font-bold px-3 py-1 rounded-md shadow">
+                            ✨ ঈদ স্পেশাল
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Thumbnails Gallery -->
+            <div class="flex gap-3 overflow-x-auto pb-2">
+                <button type="button" 
+                        onclick="switchImage('{{ product.primary_image }}')" 
+                        class="thumb-btn w-20 h-24 rounded-lg overflow-hidden border-2 border-brand-emerald flex-shrink-0 bg-gray-50">
+                    <img src="{{ product.primary_image }}" class="w-full h-full object-cover">
+                </button>
+                {% if product.hover_image %}
+                <button type="button" 
+                        onclick="switchImage('{{ product.hover_image }}')" 
+                        class="thumb-btn w-20 h-24 rounded-lg overflow-hidden border-2 border-transparent hover:border-brand-emerald flex-shrink-0 bg-gray-50">
+                    <img src="{{ product.hover_image }}" class="w-full h-full object-cover">
+                </button>
+                {% endif %}
+                {% for g in gallery_images %}
+                <button type="button" 
+                        onclick="switchImage('{{ g.image }}')" 
+                        class="thumb-btn w-20 h-24 rounded-lg overflow-hidden border-2 border-transparent hover:border-brand-emerald flex-shrink-0 bg-gray-50">
+                    <img src="{{ g.image }}" class="w-full h-full object-cover">
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right: Product Details & Purchase Form -->
+        <div class="lg:col-span-6 space-y-6">
+            <div>
+                <div class="flex items-center space-x-2 text-xs text-gray-500 mb-1.5">
+                    <span class="text-brand-emerald font-semibold">{{ product.category.name }}</span>
+                    <span>•</span>
+                    <span>SKU: {{ product.sku }}</span>
+                    <span>•</span>
+                    <span class="flex items-center text-amber-500 font-bold">
+                        <i class="fa-solid fa-star text-xs mr-1"></i> {{ product.rating }} ({{ product.rating_count }} রিভিউ)
+                    </span>
+                </div>
+
+                <h1 class="font-brand-serif text-2xl sm:text-3xl font-bold text-gray-950">
+                    {{ product.name }}
+                </h1>
+
+                <!-- Fabric Spec Pill -->
+                <div class="inline-flex items-center text-xs bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1 rounded-full mt-2 font-medium">
+                    <i class="fa-solid fa-feather mr-1.5 text-brand-gold"></i> {{ T.fabric }}: {{ product.fabric }}
+                </div>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-baseline space-x-3">
+                <span class="text-3xl font-bold text-gray-950">৳{{ product.get_price }}</span>
+                {% if product.has_discount %}
+                    <span class="text-base text-gray-400 line-through">৳{{ product.regular_price }}</span>
+                    <span class="text-xs bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded">
+                        {{ product.discount_percent }}% {{ T.off }}
+                    </span>
+                {% endif %}
+                <span class="text-xs text-emerald-600 font-medium ml-auto flex items-center">
+                    <i class="fa-solid fa-circle-check mr-1"></i> {{ T.in_stock }} ({{ product.stock }})
+                </span>
+            </div>
+
+            <!-- Add to Cart Form -->
+            <form action="{% url 'store:add_to_cart' product_id=product.id %}" method="POST" id="productForm" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Size Selection -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                            {{ T.select_size }}: <span id="selectedSizeLabel" class="text-brand-emerald font-bold">40</span>
+                        </label>
+                        <button type="button" onclick="toggleSizeModal(true)" class="text-xs text-brand-emerald hover:underline flex items-center">
+                            <i class="fa-solid fa-ruler-horizontal mr-1"></i> {{ T.size_guide }}
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2.5" id="sizeOptions">
+                        {% if sizes %}
+                            {% for s in sizes %}
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="size" value="{{ s }}" class="sr-only peer" {% if forloop.first %}checked{% endif %} onchange="document.getElementById('selectedSizeLabel').textContent = this.value">
+                                    <span class="px-4 py-2 border rounded-xl text-xs font-bold flex items-center justify-center peer-checked:bg-brand-emerald peer-checked:text-white peer-checked:border-brand-emerald transition hover:bg-gray-50">
+                                        {{ s }}
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        {% else %}
+                            {% for s in "38,40,42,44"|make_list %}
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="size" value="{{ s }}" class="sr-only peer" {% if s == '40' %}checked{% endif %} onchange="document.getElementById('selectedSizeLabel').textContent = this.value">
+                                    <span class="px-4 py-2 border rounded-xl text-xs font-bold flex items-center justify-center peer-checked:bg-brand-emerald peer-checked:text-white peer-checked:border-brand-emerald transition hover:bg-gray-50">
+                                        {{ s }}
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quantity & Purchase CTAs -->
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-3">
+                        <label class="text-xs font-bold text-gray-900 uppercase tracking-wider">{{ T.quantity }}:</label>
+                        <div class="flex items-center border border-gray-200 rounded-lg bg-white">
+                            <button type="button" onclick="adjustQty(-1)" class="px-3 py-1.5 text-gray-600 hover:text-black font-bold">-</button>
+                            <input type="number" id="qtyInput" name="quantity" value="1" min="1" max="{{ product.stock }}" class="w-12 text-center text-xs font-bold border-none outline-none">
+                            <button type="button" onclick="adjustQty(1)" class="px-3 py-1.5 text-gray-600 hover:text-black font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <!-- Add to Bag -->
+                        <button type="submit" 
+                                class="w-full py-3.5 px-6 rounded-xl bg-brand-emerald hover:bg-brand-emerald-dark text-white font-bold text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-bag-shopping text-sm"></i>
+                            <span>{{ T.add_to_bag }}</span>
+                        </button>
+
+                        <!-- Buy Now / Direct Checkout -->
+                        <button type="submit" name="next" value="{% url 'store:checkout' %}"
+                                class="w-full py-3.5 px-6 rounded-xl bg-brand-gold hover:bg-brand-gold-light text-gray-950 font-bold text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-bolt text-sm"></i>
+                            <span>{{ T.buy_now }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Direct WhatsApp Order -->
+                    <a href="https://wa.me/{{ HOTLINE_CLEAN }}?text=Hello%20AHMZ,%20I%20want%20to%20order:%20{{ product.name|urlencode }}%20(SKU:%20{{ product.sku }})%20Price:%20৳{{ product.get_price }}" 
+                       target="_blank" 
+                       class="w-full py-2.5 px-4 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 font-semibold text-xs transition flex items-center justify-center space-x-2">
+                        <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i>
+                        <span>{{ T.whatsapp_order }}</span>
+                    </a>
+                </div>
+            </form>
+
+            <!-- Bangladeshi Delivery & Service Details -->
+            <div class="rounded-xl border border-gray-200 bg-white divide-y divide-gray-100 text-xs">
+                <div class="p-3.5 flex items-start space-x-3">
+                    <i class="fa-solid fa-truck-fast text-brand-gold text-base mt-0.5"></i>
+                    <div>
+                        <h4 class="font-bold text-gray-900">ডেলিভারি চার্জ ও সময়</h4>
+                        <p class="text-gray-500 mt-0.5">
+                            • ঢাকা সিটির ভেতর: ৳৬০ (২৪ থেকে ৪৮ ঘণ্টা)<br>
+                            • ঢাকার বাইরে সারা বাংলাদেশ: ৳১২০ (২ থেকে ৩ কার্যদিবস)
+                        </p>
+                    </div>
+                </div>
+                <div class="p-3.5 flex items-start space-x-3">
+                    <i class="fa-solid fa-hand-holding-dollar text-brand-gold text-base mt-0.5"></i>
+                    <div>
+                        <h4 class="font-bold text-gray-900">ক্যাশ অন ডেলিভারি (COD)</h4>
+                        <p class="text-gray-500 mt-0.5">ডেলিভারি ম্যানের সামনে পণ্য দেখে মূল্য পরিশোধ করার নিশ্চয়তা।</p>
+                    </div>
+                </div>
+                <div class="p-3.5 flex items-start space-x-3">
+                    <i class="fa-solid fa-arrow-rotate-left text-brand-gold text-base mt-0.5"></i>
+                    <div>
+                        <h4 class="font-bold text-gray-900">সহজ সাইজ পরিবর্তন সুবিধা</h4>
+                        <p class="text-gray-500 mt-0.5">সাইজ ঠিক না হলে পণ্য পাওয়ার ৭ দিনের মধ্যে যেকোনো এক্সচেঞ্জ গ্রহণযোগ্য।</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description & Features -->
+            <div class="pt-4 border-t border-gray-200 space-y-3">
+                <h3 class="font-bold text-sm text-gray-900">পণ্যের বিবরণ (Description)</h3>
+                <div class="text-xs text-gray-600 leading-relaxed space-y-2">
+                    {{ product.description|linebreaks }}
+                </div>
+
+                {% if product.get_features_list %}
+                <h4 class="font-bold text-xs text-gray-900 pt-2">বৈশিষ্ট্য ও সেলাইয়ের খুঁটিনাটি:</h4>
+                <ul class="list-disc list-inside text-xs text-gray-600 space-y-1">
+                    {% for feat in product.get_features_list %}
+                        <li>{{ feat }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Customer Reviews Section -->
+    <div class="mt-20 pt-10 border-t border-gray-200">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <!-- Left: Add Review Form -->
+            <div class="lg:col-span-4 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                <h3 class="font-bold text-sm text-gray-900 mb-2">আপনার মতামত জানান</h3>
+                <p class="text-xs text-gray-500 mb-4">পোশাকটি ব্যবহার করে আপনার অভিজ্ঞতা কেমন ছিল?</p>
+
+                <form action="{% url 'store:add_review' product_id=product.id %}" method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-700 mb-1">আপনার নাম *</label>
+                        <input type="text" name="name" required value="{% if user.is_authenticated %}{{ user.first_name }} {{ user.last_name }}{% endif %}" placeholder="যেমন: তানভীর আহমেদ" class="w-full text-xs p-2.5 rounded-lg border border-gray-200 outline-none focus:border-brand-emerald">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-700 mb-1">শহর / জেলা</label>
+                        <input type="text" name="city" placeholder="যেমন: ঢাকা / চট্টগ্রাম" class="w-full text-xs p-2.5 rounded-lg border border-gray-200 outline-none focus:border-brand-emerald">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-700 mb-1">রেটিং</label>
+                        <select name="rating" class="w-full text-xs p-2.5 rounded-lg border border-gray-200 outline-none focus:border-brand-emerald">
+                            <option value="5">⭐⭐⭐⭐⭐ ৫ তারকা (চমৎকার)</option>
+                            <option value="4">⭐⭐⭐⭐ ৪ তারকা (খুব ভালো)</option>
+                            <option value="3">⭐⭐⭐ ৩ তারকা (মোটামুটি)</option>
+                            <option value="2">⭐⭐ ২ তারকা (উন্নতি দরকার)</option>
+                            <option value="1">⭐ ১ তারকা (খারাপ)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-700 mb-1">রিভিউ কমেন্ট *</label>
+                        <textarea name="comment" rows="3" required placeholder="কাপড়ের মান ও ফিটিংস কেমন লেগেছে?" class="w-full text-xs p-2.5 rounded-lg border border-gray-200 outline-none focus:border-brand-emerald"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-brand-emerald text-white text-xs font-bold rounded-lg hover:bg-brand-emerald-dark transition">
+                        রিভিউ সাবমিট করুন
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right: Existing Reviews -->
+            <div class="lg:col-span-8">
+                <h3 class="font-brand-serif text-xl font-bold text-gray-900 mb-6">
+                    গ্রাহকদের রিভিউ ({{ reviews.count }})
+                </h3>
+
+                <div class="space-y-4">
+                    {% for rev in reviews %}
+                    <div class="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-full bg-brand-emerald/10 text-brand-emerald font-bold text-xs flex items-center justify-center">
+                                    {{ rev.name|slice:":1" }}
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-900">{{ rev.name }}</h4>
+                                    <span class="text-[10px] text-gray-400">{{ rev.city }} • {{ rev.created_at|date:"M d, Y" }}</span>
+                                </div>
+                            </div>
+                            <div class="flex text-amber-400 text-xs">
+                                {% for i in "12345" %}
+                                    <i class="fa-solid fa-star"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-700 leading-relaxed">{{ rev.comment }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-gray-500 py-4">এই পোশাকে এখনো কোনো রিভিউ নেই। প্রথম রিভিউ দিন!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="mt-20 pt-10 border-t border-gray-200">
+        <h3 class="font-brand-serif text-2xl font-bold text-gray-900 mb-8">সম্পর্কিত অন্যান্য পোশাক</h3>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for rel_prod in related_products %}
+                {% include 'store/includes/product_card.html' with product=rel_prod %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Bangladeshi Size Guide Modal -->
+<div id="sizeModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 relative shadow-2xl">
+        <button onclick="toggleSizeModal(false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        
+        <h3 class="font-brand-serif text-lg font-bold text-gray-900 mb-2">পাঞ্জাবি ও পোশাকের সাইজ চার্ট (ইঞ্চি)</h3>
+        <p class="text-xs text-gray-500 mb-4">আপনার সঠিক মাপ অনুযায়ী সাইজ নির্বাচন করুন:</p>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 font-bold">
+                        <th class="p-2 border">সাইজ</th>
+                        <th class="p-2 border">বুক (Chest)</th>
+                        <th class="p-2 border">দৈর্ঘ্য (Length)</th>
+                        <th class="p-2 border">হাতা (Sleeve)</th>
+                        <th class="p-2 border">কলার (Collar)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr><td class="p-2 border font-bold">38 (S)</td><td class="p-2 border">38-39"</td><td class="p-2 border">40"</td><td class="p-2 border">23.5"</td><td class="p-2 border">15.0"</td></tr>
+                    <tr class="bg-amber-50/50"><td class="p-2 border font-bold">40 (M)</td><td class="p-2 border">40-41"</td><td class="p-2 border">42"</td><td class="p-2 border">24.0"</td><td class="p-2 border">15.5"</td></tr>
+                    <tr><td class="p-2 border font-bold">42 (L)</td><td class="p-2 border">42-43"</td><td class="p-2 border">44"</td><td class="p-2 border">24.5"</td><td class="p-2 border">16.0"</td></tr>
+                    <tr class="bg-amber-50/50"><td class="p-2 border font-bold">44 (XL)</td><td class="p-2 border">44-45"</td><td class="p-2 border">46"</td><td class="p-2 border">25.0"</td><td class="p-2 border">16.5"</td></tr>
+                    <tr><td class="p-2 border font-bold">46 (XXL)</td><td class="p-2 border">46-47"</td><td class="p-2 border">46"</td><td class="p-2 border">25.5"</td><td class="p-2 border">17.0"</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-[11px] text-gray-500 mt-3 italic">
+            * সাইজ নিয়ে যেকোনো বিভ্রান্তিতে আমাদের কাস্টমার কেয়ারে কল করুন: {{ HOTLINE }}
+        </p>
+
+        <button onclick="toggleSizeModal(false)" class="mt-5 w-full py-2 bg-gray-900 text-white rounded-lg text-xs font-semibold">
+            বুঝেছি, বন্ধ করুন
+        </button>
+    </div>
+</div>
+
+<script>
+    function switchImage(src) {
+        document.getElementById('mainProductImage').src = src;
+    }
+
+    function adjustQty(amount) {
+        const input = document.getElementById('qtyInput');
+        let val = parseInt(input.value) + amount;
+        if (val >= 1 && val <= parseInt(input.max)) {
+            input.value = val;
+        }
+    }
+
+    function toggleSizeModal(show) {
+        const modal = document.getElementById('sizeModal');
+        if (show) {
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+</script>
+{% endblock %}
