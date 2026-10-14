@@ -39,8 +39,17 @@ class Category(models.Model):
         ('kids', 'Kids'),
     ]
 
+    NICHE_CHOICES = [
+        ('clothing', 'পোশাক (Clothing)'),
+        ('shoes', 'জুতা (Footwear & Shoes)'),
+        ('watches', 'ঘড়ি (Luxury Watches)'),
+        ('cosmetics', 'কসমেটিকস (Cosmetics & Skincare)'),
+        ('electronics', 'ইলেকট্রনিক্স (Gadgets & Electronics)'),
+    ]
+
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=120, unique=True, blank=True, allow_unicode=True)
+    niche = models.CharField(max_length=30, choices=NICHE_CHOICES, default='clothing')
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='all')
     description = models.TextField(blank=True)
     image = models.CharField(max_length=500, blank=True, help_text="Image URL or relative path")
@@ -74,7 +83,7 @@ class Product(models.Model):
     sku = models.CharField(max_length=50, unique=True)
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='men')
-    fabric = models.CharField(max_length=150, default='100% Premium Combed Cotton')
+    fabric = models.CharField(max_length=150, default='Premium Grade Material', blank=True)
     description = models.TextField()
     features = models.TextField(blank=True, help_text="One bullet per line: collar, cut, fitting, care instructions")
     
